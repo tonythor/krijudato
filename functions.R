@@ -10,3 +10,6 @@ for (year in years) {
   df_list[[year]] <- df
 }
 final_df <- do.call(rbind, df_list)
+
+
+glimpse(final_df)
