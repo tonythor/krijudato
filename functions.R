@@ -15,7 +15,7 @@ final_df <- do.call(rbind, df_list)
 
 # create new data frame with the columns we want to use
 project_df <- final_df %>%
-  select(MainBranch, Employment, EdLevel, DevType, Country, 
+  select(ResponseID, MainBranch, Employment, EdLevel, DevType, Country, 
          Currency, CompTotal, CompFreq, LanguageHaveWorkedWith, 
          DatabaseHaveWorkedWith, OpSysProfessional.use, Age, Gender) %>%
   as.data.frame()
@@ -124,7 +124,7 @@ project_df <- project_df %>%
 
 # remove original language and database "worked with" columns
 project_df <- project_df %>%
-  select(MainBranch, Employment, EdLevel, DevType, Country, 
+  select(ResponseID, MainBranch, Employment, EdLevel, DevType, Country, 
          Currency, CompTotal, CompFreq, python, sql, java, javascript, 
          ruby, php, cplusplus, swift, scala, r, rust, julia, 
          mysql, microsoftsqlserver, mongo, postgresql, oracle,
