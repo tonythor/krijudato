@@ -15,9 +15,9 @@ final_df <- do.call(rbind, df_list)
 
 # create new data frame with the columns we want to use
 project_df <- final_df %>%
-  select(ResponseID, MainBranch, Employment, EdLevel, DevType, Country, 
-         Currency, ConvertedCompYearly, LanguageHaveWorkedWith, 
-         DatabaseHaveWorkedWith, OpSysProfessional.use, Age, Gender) %>%
+  select(ResponseId, MainBranch, Employment, EdLevel, DevType, Country, 
+         ConvertedCompYearly, LanguageHaveWorkedWith, 
+         DatabaseHaveWorkedWith, Age, Gender) %>%
   as.data.frame()
 
 
@@ -122,12 +122,17 @@ project_df <- project_df %>%
   # MariaDB
   mutate(maria = ifelse(grepl("MariaDB", DatabaseHaveWorkedWith, ignore.case = TRUE), "yes", "no")) 
 
+# rename countries
+project_df$Country[grepl("United Kingdom", project_df$Country, ignore.case = TRUE)] <- "UK"
+project_df$Country[grepl("United States", project_df$Country, ignore.case = TRUE)] <- "US"
+project_df$Country[grepl("Russian", project_df$Country, ignore.case = TRUE)] <- "Russia"
+project_df$Country[grepl("Hong Kong", project_df$Country, ignore.case = TRUE)] <- "Hong Kong"
+
 # remove original language and database "worked with" columns
 project_df <- project_df %>%
-  select(ResponseID, MainBranch, Employment, EdLevel, DevType, Country, 
-         Currency, ConvertedCompYearly, python, sql, java, javascript, 
+  select(ResponseId, MainBranch, Employment, EdLevel, DevType, Country, 
+         ConvertedCompYearly, Age, Gender, python, sql, java, javascript, 
          ruby, php, cplusplus, swift, scala, r, rust, julia, 
          mysql, microsoftsqlserver, mongo, postgresql, oracle,
-         ibmdb2, redis, sqlite, maria, S
-         OpSysProfessional.use, Age, Gender) %>%
+         ibmdb2, redis, sqlite, maria) %>%
   as.data.frame()
