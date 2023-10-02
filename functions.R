@@ -128,6 +128,6 @@ project_df <- project_df %>%
          Currency, ConvertedCompYearly, python, sql, java, javascript, 
          ruby, php, cplusplus, swift, scala, r, rust, julia, 
          mysql, microsoftsqlserver, mongo, postgresql, oracle,
-         ibmdb2, redis, sqlite, maria, 
+         ibmdb2, redis, sqlite, maria, S
          OpSysProfessional.use, Age, Gender) %>%
   as.data.frame()
