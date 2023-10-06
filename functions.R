@@ -17,7 +17,7 @@ final_df <- do.call(rbind, df_list)
 project_df <- final_df %>%
   select(ResponseId, MainBranch, Employment, EdLevel, DevType, Country, 
          ConvertedCompYearly, LanguageHaveWorkedWith, 
-         DatabaseHaveWorkedWith, Age, Gender) %>%
+         DatabaseHaveWorkedWith, PlatformHaveWorkedWith, Age, Gender) %>%
   as.data.frame()
 
 
@@ -122,6 +122,19 @@ project_df <- project_df %>%
   # MariaDB
   mutate(maria = ifelse(grepl("MariaDB", DatabaseHaveWorkedWith, ignore.case = TRUE), "yes", "no")) 
 
+## create columns for platforms - I think we should use AWS, Firebase, Microsoft Azure, Google Cloud, Heroku
+project_df <- project_df %>%
+  # AWS
+  mutate(aws = ifelse(grepl("aws", PlatformHaveWorkedWith, ignore.case = TRUE), "yes", "no")) %>%
+  # Firebase
+  mutate(firebase = ifelse(grepl("firebase", PlatformHaveWorkedWith, ignore.case = TRUE), "yes", "no")) %>%
+  # Microsoft Azure
+  mutate(azure = ifelse(grepl("azure", PlatformHaveWorkedWith, ignore.case = TRUE), "yes", "no")) %>%
+  # Google Cloud
+  mutate(googlecloud = ifelse(grepl("google cloud", PlatformHaveWorkedWith, ignore.case = TRUE), "yes", "no")) %>%
+  # Heroku
+  mutate(heroku = ifelse(grepl("heroku", PlatformHaveWorkedWith, ignore.case = TRUE), "yes", "no"))
+
 # rename countries
 project_df$Country[grepl("United Kingdom", project_df$Country, ignore.case = TRUE)] <- "UK"
 project_df$Country[grepl("United States", project_df$Country, ignore.case = TRUE)] <- "US"
@@ -134,5 +147,5 @@ project_df <- project_df %>%
          ConvertedCompYearly, Age, Gender, python, sql, java, javascript, 
          ruby, php, cplusplus, swift, scala, r, rust, julia, 
          mysql, microsoftsqlserver, mongo, postgresql, oracle,
-         ibmdb2, redis, sqlite, maria) %>%
+         ibmdb2, redis, sqlite, maria, aws, firebase, azure, googlecloud, heroku) %>%
   as.data.frame()
