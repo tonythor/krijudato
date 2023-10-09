@@ -1,7 +1,14 @@
-library(tibble)
-library(dplyr)
-library(tidyverse)
-library(tidyr)
+# 2022 clean
+
+years <- c(2022)
+df_list <- list()
+for (year in years) {
+  url <- paste0("https://tonyfraser-data.s3.amazonaws.com/stack/y%3D", year, "/survey_results_public.csv")
+  df <- read.csv(url)
+  df$year <- year
+  df_list[[year]] <- df
+}
+final_df <- do.call(rbind, df_list)
 
 # create new data frame with the columns we want to use
 project_df <- final_df %>%
@@ -9,7 +16,6 @@ project_df <- final_df %>%
          ConvertedCompYearly, LanguageHaveWorkedWith, 
          DatabaseHaveWorkedWith, PlatformHaveWorkedWith, Age, Gender) %>%
   as.data.frame()
-
 
 ## rename the items in the MainBranch column
 # rename any developer to "developer", even if it is not their primary profession (they identify as a developer)
