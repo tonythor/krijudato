@@ -1,0 +1,93 @@
+---
+title: "Project 3"
+author: "Dave Greer"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggstatsplot)
+library(purrr)
+library(tidyverse)
+library(ggpubr)
+library(rstatix)
+library(qqplotr)
+library(jtools)
+library("utf8")
+library("ggstatsplot")
+devtools::install_github("kupietz/kableExtra")
+
+```
+
+```{r }
+
+df2017 <- read.csv("https://tonyfraser-data.s3.amazonaws.com/stack/y%3D2017/survey_results_public.csv")
+df2018 <- read.csv("https://tonyfraser-data.s3.amazonaws.com/stack/y%3D2018/survey_results_public.csv")
+df2019 <- read.csv("https://tonyfraser-data.s3.amazonaws.com/stack/y%3D2019/survey_results_public.csv")
+df2020 <- read.csv("https://tonyfraser-data.s3.amazonaws.com/stack/y%3D2020/survey_results_public.csv")
+df2021 <- read.csv("https://tonyfraser-data.s3.amazonaws.com/stack/y%3D2021/survey_results_public.csv")
+df2022 <- read.csv("https://tonyfraser-data.s3.amazonaws.com/stack/y%3D2022/survey_results_public.csv")
+```
+```{r }
+
+df2017<-df2017|>rename(EdLevel =FormalEducation,OrgSize=CompanySize,DevType=DeveloperType,Employment =EmploymentStatus)
+temp2017<-df2017|>select('OrgSize','Country', 'Employment','EdLevel','DevType')
+temp2017$DatabaseWorkedWith <- rep(NA, each = length(temp2017$OrgSize))
+temp2017$LanguageWorkedWith <- rep(NA, each = length(temp2017$OrgSize))
+temp2017$YearsCodePro <- rep(NA, each = length(temp2017$OrgSize))
+temp2017$Year <- rep('2017', each = length(temp2017$OrgSize))
+
+View(temp2017)
+```
+
+```{r}
+df2018<-df2018|>rename(EdLevel =FormalEducation,OrgSize=CompanySize)
+temp2018<-df2018|>select('OrgSize','Country', 'Employment','EdLevel','DevType')
+temp2018$DatabaseWorkedWith <- rep(NA, each = length(temp2018$OrgSize))
+temp2018$LanguageWorkedWith <- rep(NA, each = length(temp2018$OrgSize))
+temp2018$YearsCodePro <- rep(NA, each = length(temp2018$OrgSize))
+temp2018$Year<- rep('2018', each = length(temp2018$OrgSize))
+```
+
+```{r}
+temp2019<-df2019|>select('OrgSize','Country', 'Employment','EdLevel','DevType','DatabaseWorkedWith','LanguageWorkedWith','YearsCodePro')
+temp2019$YearsCodePro <- rep(NA, each = length(temp2019$OrgSize))
+temp2019$Year <- rep('2019', each = length(temp2019$OrgSize))
+```
+```{r}
+temp2020 <-df2020|>select('OrgSize','Country', 'Employment','EdLevel','DevType','DatabaseWorkedWith','LanguageWorkedWith')
+temp2020$YearsCodePro <- rep(NA, each = length(temp2020$OrgSize))
+temp2020$Year <- rep('2020', each = length(temp2020$OrgSize))
+```
+```{r}
+temp2021<-df2021|>select('OrgSize','Country', 'Employment','EdLevel','DevType','DatabaseHaveWorkedWith','LanguageHaveWorkedWith','YearsCodePro')
+temp2021<-temp2021|>rename(LanguageWorkedWith =LanguageHaveWorkedWith,DatabaseWorkedWith=DatabaseHaveWorkedWith)
+temp2021$Year <- rep('2021', each = length(temp2021$OrgSize))
+```
+```{r}
+temp2022 <-df2022|>select('OrgSize','Country', 'Employment','EdLevel','DevType','DatabaseHaveWorkedWith','LanguageHaveWorkedWith','YearsCodePro')
+temp2022<-temp2022|>rename(LanguageWorkedWith =LanguageHaveWorkedWith,DatabaseWorkedWith=DatabaseHaveWorkedWith)
+temp2022$Year <- rep('2022', each = length(temp2022$OrgSize))
+```
+                     
+```{r}                    
+View(temp2017)
+View(temp2022)
+View(temp2021)
+View(temp2020)
+View(temp2019)
+View(temp2018)
+masterdf<-rbind(temp2022,temp2021,temp2020,temp2019,temp2018,temp2017)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+View(masterdf)
+write.csv(masterdf,"cleansedDataProject3.csv")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
