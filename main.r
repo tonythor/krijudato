@@ -15,4 +15,4 @@ wide_stack <- extract_and_append_cols(wide_stack,  "DatabaseWorkedWith", databas
 write.csv(wide_stack, wide_stack_fn, row.names = FALSE)
 
 
-#todo : salary for 2017?
+#todo : salary for 2017, it's not in dollars. 

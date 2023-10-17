@@ -1,6 +1,7 @@
 ---
 title: "Foundations for statistical inference - Sampling Distributions"
-author: "us"
+author: "Krijudato"
+date: "October 29, 2023"
 output:
   pdf_document: default
   html_document:
@@ -15,10 +16,89 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r}
+## Introduction
 
-source("functions.r")
+## Data Cleaning
+
+```{r}
+source("functions.r") # we'll attach the functions.r file with our submission
 library(dplyr)
 
-
+yr <- 2017:2022
+raw_stack <- merge_years(yr)
+wide_stack <- raw_stack
+languages <- c("Python", "SQL", "Java", "JavaScript", "Ruby", "PHP", "C++", "Swift", "Scala", "R", "Rust", "Julia")
+wide_stack <- extract_and_append_cols(wide_stack, "LanguageWorkedWith", languages)
+databases <- c("MySQL", "Microsoft SQL Server", "MongoDB", "PostgreSQL", "Oracle", "IBM DB2", "Redis", "SQLite", "MariaDB")
+wide_stack <- extract_and_append_cols(wide_stack,  "DatabaseWorkedWith", databases)
 ```
+
+## Analysis
+
+```{r, warning = FALSE, message = FALSE}
+## plotting languages vs salaries
+# specify the language columns
+language_cols <- c("python", "sql", "java", "javascript", "ruby", "php", "c", "swift", "scala", "r", "rust", "julia")
+
+# convert wide stack to long stack
+long_stack <- wide_stack %>%
+  pivot_longer(cols = all_of(language_cols),
+               names_to = "Language",
+               values_to = "LanguageYesOrNo",
+               names_prefix = "language_")
+
+## create a barplot showing the distribution of languages over the years
+# create a new data frame
+languages_df <- long_stack %>%
+  filter(LanguageYesOrNo == "yes") %>%
+  select(Year, AnnualSalary, Language)
+
+# create plot
+ggplot(languages_df, aes(x = Language, fill = factor(Year))) +
+  geom_bar(position = "dodge", width = 0.7) +
+  ggtitle("Language Distribution by Year") +
+  labs(
+    x = "",
+    y = "Count of Surveyors",
+    fill = "Year"
+  ) +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+## create a violin plot for distribution of salaries
+# create a new dataframe
+salary_languages_df <- long_stack %>%
+  filter(LanguageYesOrNo == "yes") %>%
+  # we're not using 2017 since the salaries are not in USD
+  filter(Year == 2018:2022) %>%
+  # remove outliers (there are a few outliers with 1bn+ salary, 
+  # majority of the distributions are below 250k)
+  filter(AnnualSalary < 250000) %>%
+  select(Year, AnnualSalary, Language)
+
+# Filter out rows with missing AnnualSalary
+salary_languages_df <- salary_languages_df[!is.na(salary_languages_df$AnnualSalary), ]
+
+# create plot
+ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)) +
+  geom_violin() +
+  # to show each year uncomment below
+  #facet_wrap(~Year) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  ggtitle(
+    "Distribution of Salaries for Each Language"
+  ) +
+  labs(
+    x = "", 
+    y = "Annual Salary (USD)"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    # remove the legend
+    legend.position = "none")
+```
+
+## Conclusion
+
+## Sources
