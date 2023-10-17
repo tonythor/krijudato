@@ -5,7 +5,9 @@ library(tidyverse)
 library("utf8")
 library(stringr)
 
-merge_years <- function(years, url_prefix) {
+merge_years <- function(years) {
+  url_prefix <- "https://tonyfraser-data.s3.amazonaws.com/stack/"
+
   construct_url <- function(year) {
     paste0(url_prefix, "y=", year, "/survey_results_public.csv")
   }
@@ -60,6 +62,7 @@ merge_years <- function(years, url_prefix) {
   combined_df <- do.call(rbind, list_of_dfs)
   return(combined_df)
 }
+
 
 extract_and_append_cols <- function(df, colname, values_to_search) {
   # Transform the values_to_search into a safe column name format
