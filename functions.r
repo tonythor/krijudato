@@ -5,78 +5,88 @@ library(tidyverse)
 library(utf8)
 library(stringr)
 
+
 merge_years <- function(years) {
   url_prefix <- "https://tonyfraser-data.s3.amazonaws.com/stack/"
+  select_cols <- c("Year", "OrgSize", "Country", "Employment", "Gender", "EdLevel", "DevType",
+    "DatabaseWorkedWith", "LanguageWorkedWith", "YearsCodePro", "AnnualSalary")
+
+  extract_and_average<- function(year_string) {
+    numbers <- as.numeric(str_extract_all(year_string, "\\d+")[[1]])  # Extract numbers
+    mean(numbers)  # Take average
+  }
 
   construct_url <- function(year) {
     paste0(url_prefix, "y=", year, "/survey_results_public.csv")
   }
 
-  list_of_dfs <- lapply(years, function(year) {
-    df <- read.csv(construct_url(year))
-    if (year == 2017) {
-      df <- df %>%
-          rename(
-            EdLevel = "FormalEducation",
-            OrgSize = "CompanySize",
-            DevType = "DeveloperType",
-            Employment = "EmploymentStatus",
-            DatabaseWorkedWith = "HaveWorkedDatabase",
-            LanguageWorkedWith = "HaveWorkedLanguage",
-            YearsCodePro = "YearsProgram"
-          ) %>%
-          select("OrgSize", "Country", "Employment", "EdLevel", "DevType", "DatabaseWorkedWith", "LanguageWorkedWith", "YearsCodePro") %>%
-          mutate(Year = year)
-        print("2017")
-        print(colnames(df))
-        return(df)
+  rename_and_select <- function(df, rename_list, add_columns = NULL) {
+    df <- df %>%
+      rename(!!!rename_list)
 
-    } else if(year == 2018) {
-      df <- df %>%
-        mutate(Year = year)%>% 
-        rename(
-          EdLevel = "FormalEducation",
-          OrgSize = "CompanySize",
-          YearsCodePro = "YearsCoding") %>%
-        select("OrgSize", "Country", "Employment", "EdLevel", "DevType", "DatabaseWorkedWith", "LanguageWorkedWith", "YearsCodePro", "Year") %>%
-        mutate(Year = year)
-        print("2018")
-        print(colnames(df))
-      return(df)
-
-    } else if(year %in% c(2019, 2020)) {
-      df <- df %>%
-        mutate(Year = year)%>% 
-        select("OrgSize", "Country", "Employment", "EdLevel", "DevType", "DatabaseWorkedWith", "LanguageWorkedWith", "YearsCodePro", "Year")
-      print("2019/20")
-      print(colnames(df))
-      return(df)
-
-    } else if(year %in% c(2021, 2022)) {
-      df <- df %>% 
-        mutate(Year = year)%>% 
-        select("OrgSize", "Country", "Employment", "EdLevel", "DevType", "DatabaseHaveWorkedWith",
-          "LanguageHaveWorkedWith", "YearsCodePro", "Year") %>%
-        rename(
-          LanguageWorkedWith = "LanguageHaveWorkedWith",
-          DatabaseWorkedWith = "DatabaseHaveWorkedWith")
-      print("2021/2022")
-      print(colnames(df))
-      return(df)
+    if (!is.null(add_columns) && length(add_columns) > 0) {
+      for (col in add_columns) {
+        df <- df %>% mutate(!!col := NA)
+      }
     }
 
-    df <- df %>%
-      select("OrgSize", "Country", "Employment", "EdLevel", "DevType", "DatabaseWorkedWith",
-             "LanguageWorkedWith", "YearsCodePro", "Year") %>%
+    df <- df %>% select(all_of(select_cols))
+    return(df)
+  }
+  list_of_dfs <- lapply(years, function(year) {
+    df <- read.csv(construct_url(year)) %>%
       mutate(Year = year)
 
+    if (year == 2017) {
+      rename_list <- c(
+        EdLevel = "FormalEducation",
+        OrgSize = "CompanySize",
+        DevType = "DeveloperType",
+        Employment = "EmploymentStatus",
+        DatabaseWorkedWith = "HaveWorkedDatabase",
+        LanguageWorkedWith = "HaveWorkedLanguage",
+        YearsCodePro = "YearsProgram"
+      )
+      add_columns <- c("AnnualSalary")
+
+    } else if(year == 2018) {
+      rename_list <- c(
+        EdLevel = "FormalEducation",
+        OrgSize = "CompanySize",
+        YearsCodePro = "YearsCoding",
+        AnnualSalary = "ConvertedSalary"
+      )
+      add_columns <- c()
+
+    } else if(year %in% c(2019, 2020)) {
+      rename_list <- list(
+        AnnualSalary = "ConvertedComp"
+      )
+      add_columns <- c()
+
+    } else if(year %in% c(2021, 2022)) {
+      rename_list <- c(
+        AnnualSalary = "ConvertedCompYearly",
+        LanguageWorkedWith = "LanguageHaveWorkedWith",
+        DatabaseWorkedWith = "DatabaseHaveWorkedWith"
+      )
+      add_columns <- c()
+    } else {
+      rename_list <- list()
+    }
+
+    df <- rename_and_select(df, rename_list, add_columns = add_columns)
     return(df)
   })
 
-  combined_df <- do.call(rbind, list_of_dfs)
+  combined_df <- do.call(rbind, list_of_dfs) %>%
+    mutate(
+      YearsCodeProAvg = sapply(YearsCodePro, extract_and_average),
+      OrgSizeAvg = sapply(OrgSize, extract_and_average)
+      )
+
   return(combined_df)
 }
-
 
 # Klussi's function
 extract_and_append_cols <- function(df, colname, values_to_search) {
