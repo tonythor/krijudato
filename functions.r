@@ -45,9 +45,10 @@ merge_years <- function(years) {
         Employment = "EmploymentStatus",
         DatabaseWorkedWith = "HaveWorkedDatabase",
         LanguageWorkedWith = "HaveWorkedLanguage",
-        YearsCodePro = "YearsProgram"
+        YearsCodePro = "YearsProgram",
+        AnnualSalary = "Salary"
       )
-      add_columns <- c("AnnualSalary")
+      add_columns <- c()
 
     } else if(year == 2018) {
       rename_list <- c(
