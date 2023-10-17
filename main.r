@@ -8,8 +8,8 @@ filename <- "merged_years.csv"
 if (file.exists(filename)) {
   master_df <- read.csv(filename)
 } else {
-  master_df <- merge_years(2017:2022, "https://tonyfraser-data.s3.amazonaws.com/stack/")
-  write.csv(master_df, filename)
+  stack_df <- merge_years(2017:2022, "https://tonyfraser-data.s3.amazonaws.com/stack/")
+  write.csv(master_df, filename, row.names = FALSE)
 }
 
 
