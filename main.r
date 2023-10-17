@@ -2,22 +2,26 @@ source("functions.r")
 library(dplyr)
 
 
-filename <- "merged_years.csv"
-if (file.exists(filename)) {
-  master_df <- read.csv(filename)
+yr <- 2017:2022
+raw_stack_fn <- "merged_stack_raw.csv"
+wide_stack_fn <- "merged_stack_wide.csv"
+
+if (file.exists(raw_stack_fn)) {
+  raw_stack <- read.csv(filename)
 } else {
-  stack_df <- merge_years(2017:2022)
-  write.csv(master_df, filename, row.names = FALSE)
+  raw_stack <- merge_years(yr)
+  write.csv(raw_stack, raw_stack_fn, row.names = FALSE)
 }
 
-
-
+wide_stack <- raw_stack
 
 languages <- c("Python", "SQL", "Java", "JavaScript", "Ruby", "PHP", "C++", "Swift", "Scala", "R", "Rust", "Julia")
-stack_df <- extract_and_append_cols(stack_df, "LanguageWorkedWith", languages)
+wide_stack <- extract_and_append_cols(wide_stack, "LanguageWorkedWith", languages)
 
 databases <- c("MySQL", "Microsoft SQL Server", "MongoDB", "PostgreSQL", "Oracle", "IBM DB2", "Redis", "SQLite", "MariaDB")
-stack_df <- extract_and_append_cols( stack_df, "DatabaseWorkedWith", databases)
+wide_stack <- extract_and_append_cols(wide_stack,  "DatabaseWorkedWith", databases)
+write.csv(wide_stack, wide_stack_fn, row.names = FALSE)
 
-# platforms <- c("AWS", "Firebase", "Microsoft Azure", "Google Cloud", "Heroku")
-# stack_df <- extract_and_append_cols( stack_df, "PlatformHaveWorkedWith", platforms)
+
+#todo : we need to extract the "highest" number from years code pro and create an integer column from it.
+#todo : get gender in there
