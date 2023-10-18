@@ -16,13 +16,19 @@ editor_options:
   chunk_output_type: console
 ---
 
+## Abstract
+brief talk about the data
+
 ## Introduction
+what the data is about
 
 ## Data Cleaning
 
 ```{r}
 source("functions.r") # we'll attach the functions.r file with our submission
 library(dplyr)
+
+options(scipen=999)
 
 yr <- 2017:2022
 raw_stack <- merge_years(yr)
@@ -38,7 +44,7 @@ wide_stack <- extract_and_append_cols(wide_stack,  "DatabaseWorkedWith", databas
 ```{r, warning = FALSE, message = FALSE}
 ## plotting languages vs salaries
 # specify the language columns
-language_cols <- c("python", "sql", "java", "javascript", "ruby", "php", "c", "swift", "scala", "r", "rust", "julia")
+language_cols <- c("python", "sql", "java", "scala", "r", "julia")
 
 # convert wide stack to long stack
 long_stack <- wide_stack %>%
@@ -74,7 +80,7 @@ salary_languages_df <- long_stack %>%
   filter(Year == 2018:2022) %>%
   # remove outliers (there are a few outliers with 1bn+ salary, 
   # majority of the distributions are below 250k)
-  filter(AnnualSalary < 250000) %>%
+  filter(AnnualSalary < 500000) %>%
   select(Year, AnnualSalary, Language)
 
 # Filter out rows with missing AnnualSalary
@@ -84,7 +90,7 @@ salary_languages_df <- salary_languages_df[!is.na(salary_languages_df$AnnualSala
 ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)) +
   geom_violin() +
   # to show each year uncomment below
-  #facet_wrap(~Year) +
+  facet_wrap(~Year) +
   theme(plot.title = element_text(hjust = 0.5)) +
   ggtitle(
     "Distribution of Salaries for Each Language"
