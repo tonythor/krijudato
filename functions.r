@@ -8,8 +8,8 @@ library(stringr)
 
 merge_years <- function(years) {
   url_prefix <- "https://tonyfraser-data.s3.amazonaws.com/stack/"
-  select_cols <- c("Year", "OrgSize", "Country", "Employment", "Gender", "EdLevel", "DevType",
-    "DatabaseWorkedWith", "LanguageWorkedWith", "YearsCodePro", "AnnualSalary")
+  select_cols <- c("Year", "OrgSize", "Country", "Employment", "Gender", "EdLevel", "Age", "DevType",
+    "DatabaseWorkedWith", "LanguageWorkedWith", "PlatformWorkedWith", "YearsCodePro", "AnnualSalary")
 
   extract_and_average<- function(year_string) {
     numbers <- as.numeric(str_extract_all(year_string, "\\d+")[[1]])  # Extract numbers
@@ -46,9 +46,10 @@ merge_years <- function(years) {
         DatabaseWorkedWith = "HaveWorkedDatabase",
         LanguageWorkedWith = "HaveWorkedLanguage",
         YearsCodePro = "YearsProgram",
-        AnnualSalary = "Salary"
+        AnnualSalary = "Salary",
+        PlatformWorkedWith="HaveWorkedPlatform"
       )
-      add_columns <- c()
+      add_columns <- c("Age")
 
     } else if(year == 2018) {
       rename_list <- c(
@@ -69,7 +70,8 @@ merge_years <- function(years) {
       rename_list <- c(
         AnnualSalary = "ConvertedCompYearly",
         LanguageWorkedWith = "LanguageHaveWorkedWith",
-        DatabaseWorkedWith = "DatabaseHaveWorkedWith"
+        DatabaseWorkedWith = "DatabaseHaveWorkedWith",
+        PlatformWorkedWith = "PlatformHaveWorkedWith" 
       )
       add_columns <- c()
     } else {
@@ -83,14 +85,14 @@ merge_years <- function(years) {
   combined_df <- do.call(rbind, list_of_dfs) %>%
     mutate(
       YearsCodeProAvg = sapply(YearsCodePro, extract_and_average),
-      OrgSizeAvg = sapply(OrgSize, extract_and_average)
-      )
+      OrgSizeAvg = sapply(OrgSize, extract_and_average),
+      AgeAvg = sapply(Age, extract_and_average)
+    )
 
   return(combined_df)
 }
 
-# Klussi's function
-extract_and_append_cols <- function(df, colname, values_to_search) {
+extract_vector_cols <- function(df, colname, values_to_search) {
   # Transform the values_to_search into a safe column name format
   safe_colnames <- str_to_lower(str_replace_all(values_to_search, "[^[:alnum:]]", ""))
 
@@ -109,4 +111,65 @@ extract_and_append_cols <- function(df, colname, values_to_search) {
   }
 
   return(df)
+}
+
+extract_list_cols <- function(df, colname, values_to_search) {
+  new_col <- as.character(names(values_to_search[1]))
+  search_terms <- unlist(values_to_search[[1]])
+
+  # Create the regex pattern for all search terms
+  search_pattern <- paste0("(?<=^|,|;|\\s)(", paste(search_terms, collapse="|"), ")(?=$|,|;|\\s)")
+
+  df <- df %>%
+    mutate(
+      !!new_col := ifelse(grepl(search_pattern, !!sym(colname), ignore.case = TRUE, perl = TRUE), "yes", "no")
+    )
+  return(df)
+}
+
+
+get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
+  raw_stack_fn <- "merged_stack_raw.csv"
+  wide_stack_fn <- "merged_stack_wide.csv"
+
+  if (load_from_cache) {
+    if (file.exists(wide_stack_fn)) {
+      print("loading wide file from cache")
+      return(read.csv(wide_stack_fn))
+    } else if (file.exists(raw_stack_fn)) {
+      print("loading raw file from cache, but building wide file")
+      raw_stack <- read.csv(raw_stack_fn)
+    } else {
+      message("No cache files found. Generating raw and wide files...")
+      yr <- 2017:2022
+      raw_stack <- merge_years(yr)
+    }
+  } else {
+    yr <- 2017:2022
+    raw_stack <- merge_years(yr)
+  }
+
+  if (persist) {
+    write.csv(raw_stack, raw_stack_fn, row.names = FALSE)
+  }
+
+  wide_stack <- raw_stack
+
+  languages <- c("Python", "SQL", "Java", "JavaScript", "Ruby", "PHP", "C++", "Swift", "Scala", "R", "Rust", "Julia")
+  wide_stack <- extract_vector_cols(wide_stack, "LanguageWorkedWith", languages)
+
+  databases <- c("MySQL", "Microsoft SQL Server", "MongoDB", "PostgreSQL", "Oracle", "IBM DB2", "Redis", "SQLite", "MariaDB")
+  wide_stack <- extract_vector_cols(wide_stack,  "DatabaseWorkedWith", databases)
+
+  platforms <- c("Microsoft Azure", "Google Cloud", "IBM Cloud or Watson", "Kubernetes", "Linux", "Windows")
+  wide_stack <- extract_vector_cols(wide_stack,  "PlatformWorkedWith", platforms)
+
+  aws_entries  <- list(aws = c("AWS", "aws", "Amazon Web Services", "Amazon Web Services (AWS)"))
+  wide_stack <- extract_list_cols(wide_stack, "PlatformWorkedWith", aws_entries)
+
+  if (persist) {
+    write.csv(wide_stack, wide_stack_fn, row.names = FALSE)
+  }
+
+  return(wide_stack)
 }
