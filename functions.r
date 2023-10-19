@@ -164,7 +164,7 @@ get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
   platforms <- c("Microsoft Azure", "Google Cloud", "IBM Cloud or Watson", "Kubernetes", "Linux", "Windows")
   wide_stack <- extract_vector_cols(wide_stack,  "PlatformWorkedWith", platforms)
 
-  aws_entries  <- list(AWS = c("aws", "Amazon Web Services", "Amazon Web Services (AWS)"))
+  aws_entries  <- list(aws = c("AWS", "aws", "Amazon Web Services", "Amazon Web Services (AWS)"))
   wide_stack <- extract_list_cols(wide_stack, "PlatformWorkedWith", aws_entries)
 
   if (persist) {
