@@ -55,7 +55,7 @@ long_stack <- wide_stack %>%
                values_to = "LanguageYesOrNo",
                names_prefix = "language_") %>%
   filter(LanguageYesOrNo == "yes") %>%
-  select(Year, Gender, AnnualSalary, Language, Employment, LanguageYesOrNo)
+  select(Year, Age, Gender, AnnualSalary, Language, Employment, LanguageYesOrNo)
 ```
 
 Now we can plot the distribution of languages over the years.
@@ -116,7 +116,7 @@ salary_languages_df <- long_stack %>%
   filter(str_detect(Employment, "full")) %>%
   # remove outliers (there are a few outliers with $500k+ salary, majority of the distributions are below 500k)
   filter(AnnualSalary < 500000) %>%
-  select(Year, Gender, AnnualSalary, Language, Employment) 
+  select(Year, Age, Gender, AnnualSalary, Language, Employment) 
 
 # Filter out rows with missing AnnualSalary
 salary_languages_df <- salary_languages_df[!is.na(salary_languages_df$AnnualSalary), ]
@@ -140,6 +140,17 @@ ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)
     axis.text.x = element_text(angle = 45, hjust = 1),
     # remove the legend
     legend.position = "none")
+```
+
+### *Salary Distribution vs Age*
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# create a new data frame that groups ages into a range
+```
+
+```{r}
+# ggplot(salary_languages_df, aes(x = Age, y = AnnualSalary)) +
+#   geom_point()
 ```
 
 ### *Average Salaries for Each Distinct Language*
