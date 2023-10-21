@@ -101,7 +101,11 @@ From the above graph, we can see that Python and SQL are the most commonly used 
 
 ### *Distribution of Salaries by Year, by Language*
 
-Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes: - includes years 2018 to 2022, as 2017's salary data is not in USD - includes only those who work full time - removes those who make over \$500,000, as the majority of the distributions are below this amount - remove those who did not input a salary
+Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes: 
+- includes years 2018 to 2022, as 2017's salary data is not in USD 
+- includes only those who work full time 
+- removes those who make over \$500,000, as the majority of the distributions are below this amount 
+- remove those who did not input a salary
 
 ```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE}
 # create a new dataframe 
@@ -255,7 +259,7 @@ scala_python <- bind_rows(
     mutate(status = "both"),
   
   wide_stack_no2017 %>%
-    # Filter for people who know only Python
+    # Filter for people who know python, but not scala
     filter(python == "yes" & scala == "no") %>%
     # Filter so only full-time employees are included
     filter(str_detect(Employment, "full")) %>%
@@ -263,7 +267,7 @@ scala_python <- bind_rows(
     mutate(status = "python"),
   
   wide_stack_no2017 %>%
-    # Filter for people who know only Scala
+    # Filter for people who know scala, but not python
     filter(python == "no" & scala == "yes") %>%
     # Filter so only full-time employees are included
     filter(str_detect(Employment, "full")) %>%
