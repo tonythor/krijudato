@@ -1,5 +1,5 @@
 ---
-title: "Foundations for statistical inference - Sampling Distributions"
+title: "Project 3"
 author: "Krijudato"
 date: "October 29, 2023"
 output:
@@ -17,9 +17,11 @@ editor_options:
 ---
 
 ## Abstract
+
 brief talk about the data
 
 ## Introduction
+
 what the data is about
 
 ## Data Cleaning
@@ -33,26 +35,34 @@ wide_stack <- get_stack_df(persist = TRUE, load_from_cache = TRUE)
 
 ## Analysis
 
-```{r, warning = FALSE, message = FALSE}
-## plotting languages vs salaries
+### *Language Distribution by Year*
+
+In order to show the language distributions, we will need to manipulate the original data frame (wide_stack).
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
 # specify the language columns
 language_cols <- c("python", "sql", "java", "scala", "r", "julia")
 
-# convert wide stack to long stack
+wide_stack <- wide_stack %>%
+  mutate(Gender = ifelse(Gender == "Woman", "Female", ifelse(Gender == "Man", "Male", Gender)))
+```
+
+```{r long-stack-df, warning = FALSE, message = FALSE}
+# convert wide stack to long stack - only use this for distribution of languages, no avg calculations
 long_stack <- wide_stack %>%
   pivot_longer(cols = all_of(language_cols),
                names_to = "Language",
                values_to = "LanguageYesOrNo",
-               names_prefix = "language_")
-
-## create a barplot showing the distribution of languages over the years
-# create a new data frame
-languages_df <- long_stack %>%
+               names_prefix = "language_") %>%
   filter(LanguageYesOrNo == "yes") %>%
-  select(Year, AnnualSalary, Language)
+  select(Year, Gender, AnnualSalary, Language, Employment, LanguageYesOrNo)
+```
 
-# create plot
-ggplot(languages_df, aes(x = Language, fill = factor(Year))) +
+Now we can plot the distribution of languages over the years.
+
+```{r dist-languages-over-years-plot, warning = FALSE, message = FALSE, echo = FALSE}
+## create a barplot showing the distribution of languages over the years
+ggplot(long_stack, aes(x = Language, fill = factor(Year))) +
   geom_bar(position = "dodge", width = 0.7) +
   ggtitle("Language Distribution by Year") +
   labs(
@@ -63,21 +73,52 @@ ggplot(languages_df, aes(x = Language, fill = factor(Year))) +
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
-## create a violin plot for distribution of salaries
-# create a new dataframe
-salary_languages_df <- long_stack %>%
+### *Language Growth Over Time*
+
+Let's plot the growth of languages over time...
+
+```{r growth-language-time, warning = FALSE, message = FALSE, echo = FALSE}
+language_growth <- long_stack %>%
   filter(LanguageYesOrNo == "yes") %>%
+  group_by(Language, Year) %>%
+  summarise(Count = n())
+
+# plot
+ggplot(language_growth, aes(x = Year, y= Count, color = Language)) +
+  geom_line() +
+  ggtitle("Language Use Over Time") + 
+  labs(
+    x = "Year",
+    y = "Surveyor Count"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From the above graph, we can see that Python and SQL are the most commonly used languages as of 2022. Julia seems to have been steadily growing since 2017, which makes sense as it is a relatively new language.
+
+### *Distribution of Salaries by Year, by Language*
+
+Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes: - includes years 2018 to 2022, as 2017's salary data is not in USD - includes only those who work full time - removes those who make over \$500,000, as the majority of the distributions are below this amount - remove those who did not input a salary
+
+```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE}
+# create a new dataframe 
+salary_languages_df <- long_stack %>%
   # we're not using 2017 since the salaries are not in USD
-  filter(Year == 2018:2022) %>%
-  # remove outliers (there are a few outliers with 1bn+ salary, 
-  # majority of the distributions are below 250k)
+  filter(Year %in% 2018:2022) %>%
+  # filter so only full time employees are included
+  filter(str_detect(Employment, "full")) %>%
+  # remove outliers (there are a few outliers with $500k+ salary, majority of the distributions are below 500k)
   filter(AnnualSalary < 500000) %>%
-  select(Year, AnnualSalary, Language)
+  select(Year, Gender, AnnualSalary, Language, Employment) 
 
 # Filter out rows with missing AnnualSalary
 salary_languages_df <- salary_languages_df[!is.na(salary_languages_df$AnnualSalary), ]
+```
 
+```{r distribution-of-salaries-over-years-plot, message = FALSE, warning = FALSE, echo = FALSE}
 # create plot
 ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)) +
   geom_violin() +
@@ -96,6 +137,159 @@ ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)
     # remove the legend
     legend.position = "none")
 ```
+
+### *Average Salaries for Each Distinct Language*
+
+It would be interesting to see the average salaries for each distinct language, split by gender. In order for us to calculate these averages, we need to create a new data frame that has the following attributes:
+
+-   excludes people who know more than one language
+-   excludes people who know no languages
+-   includes only those who work full time
+-   excludes the year 2017, as the 2017 salary data is not in USD
+
+```{r calculation-dataframe, warning = FALSE, message = FALSE}
+# Determine people with 'yes' in more than one column and remove them
+onelanguage_df <- wide_stack %>%
+  filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
+  # create a new column with the one language each person knows
+  mutate(KnownLanguage = case_when(
+    python == "yes" ~ "python",
+    sql == "yes" ~ "sql",
+    java == "yes" ~ "java",
+    scala == "yes" ~ "scala",
+    r == "yes" ~ "r",
+    julia == "yes" ~ "julia",
+    TRUE ~ "unknown"  # Handle cases where no language is known
+  )) %>%
+  # remove the cases where no language is known
+  filter(KnownLanguage != "unknown") %>%
+  # we're not using 2017 since the salaries are not in USD
+  filter(Year %in% 2018:2022) %>%
+  # filter so only full time employees are included
+  filter(str_detect(Employment, "full")) %>%
+  select(Year, Gender, Employment, AnnualSalary, KnownLanguage)
+```
+
+Once we create this new data frame, we need to group the data by gender and language, and then calculate the averages, which is shown below:
+
+```{r, average-salary-calculation, message = FALSE, warning = FALSE}
+# filter for genders "female" and "male" and find the averages 
+# for each language and gender combination
+average_salaries <- onelanguage_df %>%
+  filter(Gender %in% c("Female", "Male")) %>%
+  group_by(Gender, KnownLanguage) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE))
+```
+
+Now, we can plot the data:
+
+```{r men-vs-women-salaries-plot, message = FALSE, warning = FALSE, echo = FALSE}
+# Create a bar plot
+ggplot(average_salaries, aes(x = KnownLanguage, y = AvgSalary, fill = Gender)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  ggtitle("Average Salary for Each Distinct Language") +
+  labs(x = "Language", y = "Average Salary") +
+  scale_fill_manual(values = c("Female" = "hotpink", "Male" = "darkblue")) +
+  theme_minimal() + 
+  coord_flip()
+```
+
+As you can see, the average female salary for scala is an outlier, with its average salary being over \$400,000. Let's look into this more...
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+library(gt)
+# create a table of the counts
+counts_avg_salaries <- onelanguage_df %>%
+  filter(Gender %in% c("Female", "Male")) %>%
+  filter(!is.na(AnnualSalary)) %>%
+  group_by(Gender, KnownLanguage) %>%
+  mutate(Count = n()) %>%
+  select(KnownLanguage, Gender, Count) %>%
+  distinct() %>% 
+  arrange(KnownLanguage) %>%
+  as.data.frame()
+
+# create gt table
+counts_avg_salaries_tbl <- gt(counts_avg_salaries) 
+  
+counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
+  tab_header(
+    title = md("**Count of Surveyors in Average Salary Calculation**")
+  ) |>
+  cols_label(
+    KnownLanguage = md("**Language**"),
+    Gender = md("**Gender**"),
+    Count = md("**Count**")
+  )
+
+# show table
+counts_avg_salaries_tbl
+```
+
+We can see from the above table that there are only 4 females in this subset of data that know julia. This would not be an accurate representation of salaries for females who know only julia. We could infer the same conclusion about females who know scala, as there are only 27 females who know only scala versus 506 men.
+
+### *Case Study: Language Combinations*
+
+Do people who know both python and scala make more money on average than someone who knows only scala? Only python?
+
+In order to answer this question, we will need to create a new data frame that does the following:
+
+-   filters for years 2018 - 2022, as 2017's salaries are not in USD
+-   filter for instances where people know both scala & python
+-   filter for instances where people know scala, but not python
+-   filter for instances where people know python, but not scala
+-   filter for full time employees only
+
+```{r scala-and-python-combinations-df, message = FALSE, warning = FALSE}
+wide_stack_no2017 <- wide_stack %>%
+  # filter for years 2018-2022, since 2017 is not in USD
+  filter(Year %in% 2018:2022)
+
+scala_python <- bind_rows(
+  wide_stack_no2017 %>%
+    # Filter for people who know both Python & Scala
+    filter(python == "yes" & scala == "yes") %>%
+    # Filter so only full-time employees are included
+    filter(str_detect(Employment, "full")) %>%
+    select(Year, Gender, AnnualSalary) %>%
+    mutate(status = "both"),
+  
+  wide_stack_no2017 %>%
+    # Filter for people who know only Python
+    filter(python == "yes" & scala == "no") %>%
+    # Filter so only full-time employees are included
+    filter(str_detect(Employment, "full")) %>%
+    select(Year, Gender, AnnualSalary) %>%
+    mutate(status = "python"),
+  
+  wide_stack_no2017 %>%
+    # Filter for people who know only Scala
+    filter(python == "no" & scala == "yes") %>%
+    # Filter so only full-time employees are included
+    filter(str_detect(Employment, "full")) %>%
+    select(Year, Gender, AnnualSalary) %>%
+    mutate(status = "scala")
+) %>%
+  filter(Gender %in% c("Female", "Male")) %>%
+  group_by(status, Gender) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE), .groups = "drop")
+
+```
+
+Now, we can plot the data:
+
+```{r scala-and-python-combinations-plot, message = FALSE, warning = FALSE, echo = FALSE}
+# create a bar plot
+ggplot(scala_python, aes(x = status, y = AvgSalary, fill = Gender)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  ggtitle("Average Salaries for\nScala/Python Combinations") +
+  labs(x = "Combination", y = "Average Salary") +
+  # center title
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_minimal() 
+```
+
+From the above graph, we can infer that knowing a combination of the two languages will likely result in a higher salary.
 
 ## Conclusion
 
