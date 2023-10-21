@@ -144,13 +144,25 @@ ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)
 
 ### *Salary Distribution vs Age*
 
+
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
 # create a new data frame that groups ages into a range
+age_vs_salary <- wide_stack %>%
+  # filter out 2017 since the salaries are not in USD
+  filter(Year %in% 2018:2022) %>%
+  # filter so only full time employees are included
+  filter(str_detect(Employment, "full")) %>% 
+  # create age group categories
+  mutate(Age_Group = cut(Age, 
+                        breaks = c(18, seq(23, 80, by = 5)),
+                        labels = paste(seq(18, 75, by = 5), seq(23, 80, by = 5), sep = "-"),
+                        right = FALSE)) %>%
+  select(Year, Age_Group, Gender, AnnualSalary)
 ```
 
 ```{r}
-# ggplot(salary_languages_df, aes(x = Age, y = AnnualSalary)) +
-#   geom_point()
+ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
+   geom_point()
 ```
 
 ### *Average Salaries for Each Distinct Language*
