@@ -133,25 +133,25 @@ ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)
 ```
 
 
-## How does organization size relate to the number of years professionally coding?
+## Organization Size and Number of Years Professionally Coding
+### Average Organization Size by the Average Number of Years Coding Professionally
+
+It appears that people of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
 
 ```{r}
 
 ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
   geom_point() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top 10 Average Salaries by Country")
+  ggtitle("Average Organization Size by Average Number of Years Coding Professionally")
 
 ```
 
-### Conclusions
-
-It appears that people of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
-
-
-
 ## Salaries
 ### Salaries by Country
+
+Monaco and Afghanistan were the countries with the two highest average annual salaries.
+
 ```{r}
 
 AvgSalaries <- wide_stack |> 
@@ -170,6 +170,11 @@ ggplot(AvgSalaries, aes(x = Country, y = AvgSalary)) +
 ```
 
 ### Salaries by Developer Type
+
+In the code, only the first developer type chosen by each individual was used. This was because people likely chose their main job title first. Each individual in the graph was only represented in one category of "Developer Type" using this logic.
+
+It appeared that blockchain developers have the highest salary. However, this might be an outlier or incorrect data. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Also, this information may not be correct because individuals input their salaries, which may or may not be correct. Senior executives and blockchain developers are likely paid the most, not project managers.
+
 ```{r}
 tempWideStack <- wide_stack
 tempWideStack[c('DevType', 'To.Delete')] <- str_split_fixed(tempWideStack$DevType, ';', 2)
@@ -190,6 +195,9 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
 ```
 
 ### Average Salaries in the U.S. by Developer Type
+
+Specifically in the U.S., blockchain developers also had the highest average annual salaries.
+
 ```{r}
 
 AvgSalaries <- tempWideStack |> 
@@ -208,9 +216,11 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
 ```
 
 
-
-
 ### Average Salaries in the U.S. by Developer Type (minus blockchain)
+
+The following graph was created without blockchain developers because that category had such a high average salary that it was challenging to compare the salaries of other types of developers.
+
+In this graph, we can see that project managers and senior executives had the highest annual salaries out of all the job titles, which is just like the other countries. Again, these two categories may not be the true top two categories (under blockchain) because individuals put in their salaries, and those salaries were never verified.
 
 ```{r excludingBlockchain}
 
@@ -260,13 +270,9 @@ ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
 ```
 
 
-
-### Conclusions: Salaries
-
-Monaco and Afghanistan were the countries with the two highest average annual salaries. Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Specifically in the U.S., blockchain developers also had the highest average annual salaries. Like the rest of the world, project managers and senior executives had the highest annual salaries out of all the job titles.
-
-
 ## Job status and degree type
+
+### Count of People with a Specific Job Status by Degree
 
 It seems that the most number of people have a Bachelor's degree and are employed full-time. People are most likely to be employed full-time if they have a Bachelor's degree, Master's degree, or completed some college. Also, people who have a Bachelor's degree are more likely to be self-employed than any other degree. People who only completed high school are most likely to be unemployed. Since most people who took the survey had Bachelor's degrees based on these counts, it may have skewed the results. Also, people are more likely to take this survey if they are employed because they may use Stack Overflow to help them while working at their job.
 
