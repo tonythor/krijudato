@@ -101,13 +101,14 @@ From the above graph, we can see that Python and SQL are the most commonly used 
 
 ### *Distribution of Salaries by Year, by Language*
 
-Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes: 
+Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes:
+
 - includes years 2018 to 2022, as 2017's salary data is not in USD 
 - includes only those who work full time 
 - removes those who make over \$500,000, as the majority of the distributions are below this amount 
 - remove those who did not input a salary
 
-```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE}
+```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE, echo = FALSE}
 # create a new dataframe 
 salary_languages_df <- long_stack %>%
   # we're not using 2017 since the salaries are not in USD
@@ -144,26 +145,40 @@ ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)
 
 ### *Salary Distribution vs Age*
 
+Let's see if there is an impact on salary due to age. We will need to filter for the following: - 2018 to 2022, as 2017 salaries are not in USD - full time employees only - remove cases where age is NA
 
 ```{r, message = FALSE, warning = FALSE, echo = FALSE}
+wide_stack$Age <- as.numeric(wide_stack$Age)
 # create a new data frame that groups ages into a range
 age_vs_salary <- wide_stack %>%
   # filter out 2017 since the salaries are not in USD
   filter(Year %in% 2018:2022) %>%
   # filter so only full time employees are included
-  filter(str_detect(Employment, "full")) %>% 
+  filter(str_detect(Employment, "full")) %>%
+  # remove rows where age is NA
+  filter(!is.na(Age)) %>%
   # create age group categories
-  mutate(Age_Group = cut(Age, 
-                        breaks = c(18, seq(23, 80, by = 5)),
-                        labels = paste(seq(18, 75, by = 5), seq(23, 80, by = 5), sep = "-"),
-                        right = FALSE)) %>%
+  mutate(Age_Group = cut(Age,
+                    breaks = c(18, seq(23, 65, by = 5)),  # Create breaks from 18 to 65 in increments of 5
+                    labels = paste(seq(18, 60, by = 5), seq(23, 65, by = 5), sep = "-"),
+                    right = FALSE)) %>%
+  na.exclude(Age_Group) %>%
   select(Year, Age_Group, Gender, AnnualSalary)
 ```
 
-```{r}
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
 ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
-   geom_point()
+  geom_point() +
+  ggtitle("Age vs. Annual Salary") +
+  labs(
+    x = "Age Group",
+    y = "Annual Salary (USD)"
+  ) +
+  # center title
+  theme(plot.title = element_text(hjust = 0.5))
 ```
+
+We can see from the above graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older.
 
 ### *Average Salaries for Each Distinct Language*
 
@@ -174,7 +189,7 @@ It would be interesting to see the average salaries for each distinct language, 
 -   includes only those who work full time
 -   excludes the year 2017, as the 2017 salary data is not in USD
 
-```{r calculation-dataframe, warning = FALSE, message = FALSE}
+```{r calculation-dataframe, warning = FALSE, message = FALSE, echo = FALSE}
 # Determine people with 'yes' in more than one column and remove them
 onelanguage_df <- wide_stack %>%
   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
@@ -221,7 +236,7 @@ ggplot(average_salaries, aes(x = KnownLanguage, y = AvgSalary, fill = Gender)) +
   coord_flip()
 ```
 
-As you can see, the average female salary for scala is an outlier, with its average salary being over \$400,000. Let's look into this more...
+As you can see, the average female salary for Scala is an outlier, with its average salary being over \$400,000. Let's look into this more...
 
 ```{r, warning = FALSE, message = FALSE, echo = FALSE}
 library(gt)
@@ -253,21 +268,21 @@ counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
 counts_avg_salaries_tbl
 ```
 
-We can see from the above table that there are only 4 females in this subset of data that know julia. This would not be an accurate representation of salaries for females who know only julia. We could infer the same conclusion about females who know scala, as there are only 27 females who know only scala versus 506 men.
+We can see from the above table that there are only 4 females in this subset of data that know Julia. In regards to the actual population of females who know only Julia, this would not be an accurate representation of salaries. We could infer the same conclusion about females who know Scala, as there are only 27 females who know only Scala versus 506 men. However, this *would* be an accurate representation of salaries for the sample. In other words, of the females who filled out the stack overflow survey, these average salaries are accurate.
 
 ### *Case Study: Language Combinations*
 
-Do people who know both python and scala make more money on average than someone who knows only scala? Only python?
+Do people who know both Python and Scala make more money on average than someone who knows only Scala? Only Python?
 
 In order to answer this question, we will need to create a new data frame that does the following:
 
 -   filters for years 2018 - 2022, as 2017's salaries are not in USD
--   filter for instances where people know both scala & python
--   filter for instances where people know scala, but not python
--   filter for instances where people know python, but not scala
+-   filter for instances where people know both Scala & Python
+-   filter for instances where people know Scala, but not Python
+-   filter for instances where people know Python, but not Scala
 -   filter for full time employees only
 
-```{r scala-and-python-combinations-df, message = FALSE, warning = FALSE}
+```{r scala-and-python-combinations-df, message = FALSE, warning = FALSE, echo = FALSE}
 wide_stack_no2017 <- wide_stack %>%
   # filter for years 2018-2022, since 2017 is not in USD
   filter(Year %in% 2018:2022)
