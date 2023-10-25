@@ -467,7 +467,13 @@ ggplot(scala_python, aes(x = status, y = AvgSalary, fill = Gender)) +
 
 ```
 
-### Scala and Python Time
+### Scala and Python Time Series
+
+From the graph below, we can infer that knowing a combination of the two languages will 
+likely result in a higher salary and despite a drop in the salaries of python
+developers from 2019 to 2021 there is marked growth in salaries in all areas of
+expertise in the past 2 years in the United States.
+
 
 ```{r salary over time }
 
@@ -508,9 +514,13 @@ wide_stack_no2017$EdLevel<-gsub(r"{\s*\([^\)]+\)}","",as.character(wide_stack_no
 wide_stack_no2017US<-wide_stack_no2017%>%filter(str_detect(Country, "United States")) 
 EdLevels<-c("Associate degree","Bachelor’s degree","Some college/university study without earning a degree", "Master’s degree","Other doctoral degree","Professional degree")
 wide_stack_no2017US<-wide_stack_no2017US%>%filter(wide_stack_no2017US$EdLevel %in% EdLevels)
+
+
 ```
-### Level of Education Years
-stuff goes here
+### Scala and Python Combined with Level of Education Years Time Series
+The growth of salaries is also seen across all levels of education roughly since 2021.  Although the nature
+of this growth is not entirely clear because the survey was based on individuals
+self reporting their education.
 
 ```{r}
 
@@ -550,12 +560,8 @@ colnames(df_scala_python_edlevel)[colnames(df_scala_python_edlevel) == "EdLevel"
 ggplot(df_scala_python_edlevel,aes(x=Year,y=AvgSalary, color=`Level of Education`,size=.3))+ geom_path()+ggtitle("Average Salaries for Scala and Python (USA) By Level of Education Years  2018-2022\n")+labs(y="Average Salary in USD" ,x="Year")
 ```
 
-From the above graphs, we can infer that knowing a combination of the two languages will likely result in a higher salary and despite a drop in the salaries of python
-developers from 2019 to 2021 there is marked growth in salaries in all areas of
-expertise in the past 2 years in the United States.  The growth of salaries is 
-also seen across all levels of education roughly since 2021.  Although the nature
-of this growth is not entirely clear because the survey was based on individuals
-self reporting their education.
+
+
 
 
 ## Sources
