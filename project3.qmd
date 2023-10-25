@@ -549,7 +549,8 @@ developers from 2019 to 2021 there is marked growth in salaries in all areas of
 expertise in the past 2 years in the United States.  The growth of salaries is 
 also seen across all levels of education roughly since 2021.  Although the nature
 of this growth is not entirely clear because the survey was based on individuals
-self reporting their education.
+self reporting their education. Period
+
 
 
 ## Sources
