@@ -272,7 +272,7 @@ ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
 
 ## Job status and degree type
 
-### 
+### Count of People with a Specific Job Status by Degree
 
 It seems that the most number of people have a Bachelor's degree and are employed full-time. People are most likely to be employed full-time if they have a Bachelor's degree, Master's degree, or completed some college. Also, people who have a Bachelor's degree are more likely to be self-employed than any other degree. People who only completed high school are most likely to be unemployed. Since most people who took the survey had Bachelor's degrees based on these counts, it may have skewed the results. Also, people are more likely to take this survey if they are employed because they may use Stack Overflow to help them while working at their job.
 
