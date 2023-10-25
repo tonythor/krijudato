@@ -16,11 +16,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-Tony 
-## Abstract
-## Introduction
-## Data Cleaning
-Tony
+Tony \## Abstract \## Introduction \## Data Cleaning Tony
 
 ```{r, warning = FALSE, message = FALSE, output=FALSE}
 source("functions.r") # we'll attach the functions.r file with our submission
@@ -48,12 +44,13 @@ long_stack <- wide_stack %>%
 
 ## Languages Over Time
 
-### Langauges over time 
+### Languages over time
 
-From the above graph, we can see that Python and SQL are the most commonly used languages as of 2022. Julia seems to have been steadily growing since 2017, which makes sense as it is a relatively new language.
+What trends can we observe regarding language usage over the years?
 
-```{r growth-language-time, warning = FALSE, message = FALSE, echo = FALSE}
+As shown in the graph below, Python and SQL are the most prevalent languages in 2022. Notably, Julia appears to have exhibited consistent growth since 2017, which makes sense considering it is a relatively new language.
 
+```{r growth-language-time, warning = FALSE, message = FALSE}
 language_growth <- long_stack %>%
   filter(LanguageYesOrNo == "yes") %>%
   group_by(Language, Year) %>%
@@ -70,12 +67,11 @@ ggplot(language_growth, aes(x = Year, y= Count, color = Language)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
+### Distribution over the years.
 
+The plot below provides a clear visualization of the distribution of each language over the years, versus the previous graph which more clearly visualized growth of languages. Notably, in the plot, it is evident that the adoption of Julia has shown steady growth since 2017.
 
-### Distribution over the years. 
-Now we can plot the distribution of languages over the years.
-
-```{r dist-languages-over-years-plot, warning = FALSE, message = FALSE, echo = FALSE}
+```{r dist-languages-over-years-plot, warning = FALSE, message = FALSE}
 ## create a barplot showing the distribution of languages over the years
 ggplot(long_stack, aes(x = Language, fill = factor(Year))) +
   geom_bar(position = "dodge", width = 0.7) +
@@ -94,12 +90,14 @@ ggplot(long_stack, aes(x = Language, fill = factor(Year))) +
 
 Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes:
 
-- includes years 2018 to 2022, as 2017's salary data is not in USD 
-- includes only those who work full time 
-- removes those who make over \$500,000, as the majority of the distributions are below this amount 
-- remove those who did not input a salary
+-   includes years 2018 to 2022, as 2017's salary data is not in USD
+-   includes only those who work full time
+-   removes those who make over \$500,000, as the majority of the distributions are below this amount
+-   remove those who did not input a salary
 
-```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE, echo = FALSE}
+The violin plot below illustrates the salary distributions for each language in each year. From the plot, it's apparent that Scala has consistently held the highest average salary among the six languages since 2018.
+
+```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE}
 # create a new dataframe 
 salary_languages_df <- long_stack %>%
   # we're not using 2017 since the salaries are not in USD
@@ -132,7 +130,6 @@ ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)
     legend.position = "none")
 ```
 
-
 ## How does organization size relate to the number of years professionally coding?
 
 ```{r}
@@ -148,10 +145,10 @@ ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
 
 It appears that people of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
 
-
-
 ## Salaries
+
 ### Salaries by Country
+
 ```{r}
 
 AvgSalaries <- wide_stack |> 
@@ -170,6 +167,7 @@ ggplot(AvgSalaries, aes(x = Country, y = AvgSalary)) +
 ```
 
 ### Salaries by Developer Type
+
 ```{r}
 tempWideStack <- wide_stack
 tempWideStack[c('DevType', 'To.Delete')] <- str_split_fixed(tempWideStack$DevType, ';', 2)
@@ -190,6 +188,7 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
 ```
 
 ### Average Salaries in the U.S. by Developer Type
+
 ```{r}
 
 AvgSalaries <- tempWideStack |> 
@@ -207,9 +206,6 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
 
 ```
 
-
-
-
 ### Average Salaries in the U.S. by Developer Type (minus blockchain)
 
 ```{r excludingBlockchain}
@@ -224,11 +220,15 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
 
 ### Salary Distribution vs Age
 
-Let's see if there is an impact on salary due to age. We will need to filter for the following: - 2018 to 2022, as 2017 salaries are not in USD - full time employees only - remove cases where age is NA
+Let's examine whether age has an influence on salary. We will need to filter for the following:
 
-We can see from the above graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older.
+-   2018 to 2022, as 2017 salaries are not in USD
+-   full time employees only
+-   remove cases where age is NA
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE}
+We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey. It's possible that older professionals in the industry are less inclined to engage with Stack Overflow.
+
+```{r, message = FALSE, warning = FALSE}
 wide_stack$Age <- as.numeric(wide_stack$Age)
 # create a new data frame that groups ages into a range
 age_vs_salary <- wide_stack %>%
@@ -245,9 +245,7 @@ age_vs_salary <- wide_stack %>%
                     right = FALSE)) %>%
   na.exclude(Age_Group) %>%
   select(Year, Age_Group, Gender, AnnualSalary)
-```
 
-```{r, warning = FALSE, message = FALSE, echo = FALSE}
 ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
   geom_point() +
   ggtitle("Age vs. Annual Salary") +
@@ -259,12 +257,9 @@ ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
-
 ### Conclusions: Salaries
 
 Monaco and Afghanistan were the countries with the two highest average annual salaries. Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Specifically in the U.S., blockchain developers also had the highest average annual salaries. Like the rest of the world, project managers and senior executives had the highest annual salaries out of all the job titles.
-
 
 ## Job status and degree type
 
@@ -313,16 +308,18 @@ ggplot(jobsAndDegrees, aes(Degree, ..count..)) +
 
 Surveyors in Average Salary Calculation
 
-###  Average Salary for Each Distinct Language
+### Average Salary for Each Distinct Language
 
-It would be interesting to see the average salaries for each distinct language, split by gender. In order for us to calculate these averages, we need to create a new data frame that has the following attributes:
+We are interested in examining the average salaries for each distinct programming language, segmented by gender. In order for us to calculate these averages, we need to create a new data frame that has the following attributes:
 
 -   excludes people who know more than one language
 -   excludes people who know no languages
 -   includes only those who work full time
 -   excludes the year 2017, as the 2017 salary data is not in USD
 
-```{r calculation-dataframe, warning = FALSE, message = FALSE, echo = FALSE}
+The below plot illustrates the average salary per gender for each distinct language.
+
+```{r calculation-dataframe, warning = FALSE, message = FALSE}
 # Determine people with 'yes' in more than one column and remove them
 onelanguage_df <- wide_stack %>%
   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
@@ -361,11 +358,11 @@ ggplot(average_salaries, aes(x = KnownLanguage, y = AvgSalary, fill = Gender)) +
   coord_flip()
 ```
 
-### Count of Surveyorsount of
+### Count of Surveyors Table
 
-As you can see, the average female salary for Scala is an outlier, with its average salary being over \$400,000. Let's look into this more...
+From the previous graph, we see that the average female salary for Scala is an outlier, with its average salary being over \$400,000. To investigate this further, we will construct a table displaying the respondent counts for each scenario.
 
-
+From the table below, it's apparent that there are only four females in this specific dataset who are proficient in Julia. When considering the actual population of females who exclusively know Julia, this dataset may not provide an accurate representation of their salaries. A similar inference could be made for Scala, as there are only 27 females who exclusively know Scala in contrast to 506 men. However, it's important to note that this dataset accurately reflects the salaries of females who participated in the Stack Overflow survey. In other words, these average salaries are representative of the sample of females who completed the survey, but not the true population of females who know Scala and Julia.
 
 ```{r}
 # create a table of the counts
@@ -396,16 +393,11 @@ counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
 counts_avg_salaries_tbl
 ```
 
-### Conclusions: Gender and Language
-
-We can see from the above table that there are only 4 females in this subset of data that know Julia. In regards to the actual population of females who know only Julia, this would not be an accurate representation of salaries. We could infer the same conclusion about females who know Scala, as there are only 27 females who know only Scala versus 506 men. However, this *would* be an accurate representation of salaries for the sample. In other words, of the females who filled out the stack overflow survey, these average salaries are accurate.
-
-
-## Case Studies: 
+## Case Studies:
 
 ### Scala or Python or Both by Gender
 
-Do people who know both Python and Scala make more money on average than someone who knows only Scala? Only Python?
+Is there a financial advantage to having proficiency in both Python and Scala compared to solely knowing Scala or Python?
 
 In order to answer this question, we will need to create a new data frame that does the following:
 
@@ -415,7 +407,7 @@ In order to answer this question, we will need to create a new data frame that d
 -   filter for instances where people know Python, but not Scala
 -   filter for full time employees only
 
-From the above graph, we can infer that knowing a combination of the two languages will likely result in a higher salary.
+Based on the below graph, we can infer that knowing a combination of the two languages will likely result in a higher salary.
 
 ```{r scala-and-python-combinations-df, message = FALSE, warning = FALSE, echo = FALSE}
 wide_stack_no2017 <- wide_stack %>%
@@ -461,7 +453,7 @@ ggplot(scala_python, aes(x = status, y = AvgSalary, fill = Gender)) +
 
 ```
 
-### Scala and Python Time
+### sScala and Python Time
 
 ```{r salary over time }
 
@@ -503,7 +495,9 @@ wide_stack_no2017US<-wide_stack_no2017%>%filter(str_detect(Country, "United Stat
 EdLevels<-c("Associate degree","Bachelor’s degree","Some college/university study without earning a degree", "Master’s degree","Other doctoral degree","Professional degree")
 wide_stack_no2017US<-wide_stack_no2017US%>%filter(wide_stack_no2017US$EdLevel %in% EdLevels)
 ```
+
 ### Level of Education Years
+
 stuff goes here
 
 ```{r}
@@ -544,12 +538,6 @@ colnames(df_scala_python_edlevel)[colnames(df_scala_python_edlevel) == "EdLevel"
 ggplot(df_scala_python_edlevel,aes(x=Year,y=AvgSalary, color=`Level of Education`,size=.3))+ geom_path()+ggtitle("Average Salaries for Scala and Python (USA) By Level of Education Years  2018-2022\n")+labs(y="Average Salary in USD" ,x="Year")
 ```
 
-From the above graphs, we can infer that knowing a combination of the two languages will likely result in a higher salary and despite a drop in the salaries of python
-developers from 2019 to 2021 there is marked growth in salaries in all areas of
-expertise in the past 2 years in the United States.  The growth of salaries is 
-also seen across all levels of education roughly since 2021.  Although the nature
-of this growth is not entirely clear because the survey was based on individuals
-self reporting their education.
-
+From the above graphs, we can infer that knowing a combination of the two languages will likely result in a higher salary and despite a drop in the salaries of python developers from 2019 to 2021 there is marked growth in salaries in all areas of expertise in the past 2 years in the United States. The growth of salaries is also seen across all levels of education roughly since 2021. Although the nature of this growth is not entirely clear because the survey was based on individuals self reporting their education.
 
 ## Sources
