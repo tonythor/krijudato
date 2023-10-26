@@ -1,6 +1,6 @@
 ---
-title: "Project 3"
-author: "Krijudato"
+title: "Finding Value within Data Science Industry"
+author: "Team Krijudato"
 date: "October 29, 2023"
 output:
   pdf_document: default
@@ -16,11 +16,12 @@ editor_options:
   chunk_output_type: console
 ---
 
-Tony 
-## Abstract
-## Introduction
-## Data Cleaning
-Tony
+### Project Orerview
+![Overview](./images/overview.svg)
+
+### Data Cleaning Overview
+
+
 
 ```{r, warning = FALSE, message = FALSE, output=FALSE}
 source("functions.r") # we'll attach the functions.r file with our submission
