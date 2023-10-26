@@ -1,41 +1,58 @@
 ---
-title: "Finding Value within Data Science Industry"
+title: "Finding Value within the Data Science Industry"
 author: "Team Krijudato"
 date: "October 29, 2023"
 output:
   pdf_document: default
   html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
     includes:
       in_header: header.html
     css: ./lab.css
     highlight: pygments
     theme: cerulean
-    toc: true
-    toc_float: true
 editor_options: 
   chunk_output_type: console
 ---
 
-### Project Orerview
-![Overview](./images/overview.svg)
+---
 
-### Data Cleaning Overview
+### Project Overview
+![](./images/overview.svg)
 
+---
 
+### Data Engineering Overview
 
-```{r, warning = FALSE, message = FALSE, output=FALSE}
+Our data engineerging pipeline does four things.
+
+1. For each year, download raw survey data from our s3 cache.
+2. Normalize the structure of each year, minor cleaning, tehn union together. 
+3. Explode wide certain multivalue columns, like "PlatformWorkedWith" which contains both AWS and Google Cloud.
+4. Save the CSV file in the root directory so the markdown can load it from cache.
+
+[funcitons.r](https://github.com/tonythor/krijudato/blob/develop/functions.r) contains our data engineering pipeline code.
+
+Also, to prepare for this project, we had to do a column analysis. If you'd like to see what went into that, review and run our [admin.r](https://github.com/tonythor/krijudato/blob/develop/admin.r) file.
+
+---
+
+_load and prepare base data..._
+
+```{r, globaloptions, warning = FALSE, message = FALSE, output=FALSE}
+packages <- c("dplyr","tidyr", "ggplot2", "stringr", "gt", "gridExtra")
+lapply(packages, library, character.only = TRUE)
 source("functions.r") # we'll attach the functions.r file with our submission
-library(dplyr)
 options(scipen=999)
-library(tidyr)
-library(ggplot2)
-library(stringr)
-library(gt)
+
 wide_stack <- get_stack_df(persist = TRUE, load_from_cache = TRUE)
 language_cols <- c("python", "sql", "java", "scala", "r", "julia")
 
 wide_stack <- wide_stack %>%
-  mutate(Gender = ifelse(Gender == "Woman", "Female", ifelse(Gender == "Man", "Male", Gender)))
+  mutate(Gender = ifelse(Gender == "Woman", "Female", ifelse(Gender == "Man", "Male", Gender))) %>%
+  mutate(Age = as.numeric(as.character(Age)))
 
 long_stack <- wide_stack %>%
   pivot_longer(cols = all_of(language_cols),
@@ -46,52 +63,43 @@ long_stack <- wide_stack %>%
   select(Year, Age, Gender, AnnualSalary, Language, Employment, LanguageYesOrNo)
 
 ```
+_done loading..._ 
 
-## Languages Over Time
+---
 
-### Languages over time
+## The Programming Languages of Data Science
 
-What trends can we observe regarding language usage over the years?
+### Language use over time
 
-As shown in the graph below, Python and SQL are the most prevalent languages in 2022. Notably, Julia appears to have exhibited consistent growth since 2017, which makes sense considering it is a relatively new language.
+Python and SQL are the most prevalent languages in 2022. Notably, Julia appears to have exhibited consistent growth since 2017, which makes sense considering it is a relatively new language. The distribution plot is another glimpse of usage changes over time. 
 
-```{r growth-language-time, warning = FALSE, message = FALSE}
+```{r side_by_side_over_time, warning = FALSE, message = FALSE}
 language_growth <- long_stack %>%
   filter(LanguageYesOrNo == "yes") %>%
   group_by(Language, Year) %>%
   summarise(Count = n())
 
-ggplot(language_growth, aes(x = Year, y= Count, color = Language)) +
+p1 <- ggplot(language_growth, aes(x = Year, y= Count, color = Language)) +
   geom_line() +
   ggtitle("Language Use Over Time") + 
-  labs(
-    x = "Year",
-    y = "Surveyor Count"
-  ) +
+  labs( x = "Year", y = "Count of Surveyors" ) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
-```
 
-### Distribution over the years.
-
-The plot below provides a clear visualization of the distribution of each language over the years, versus the previous graph which more clearly visualized growth of languages. Notably, in the plot, it is evident that the adoption of Julia has shown steady growth since 2017.
-
-```{r dist-languages-over-years-plot, warning = FALSE, message = FALSE}
-## create a barplot showing the distribution of languages over the years
-ggplot(long_stack, aes(x = Language, fill = factor(Year))) +
+# Second plot
+p2 <- ggplot(long_stack, aes(x = Language, fill = factor(Year))) +
   geom_bar(position = "dodge", width = 0.7) +
   ggtitle("Language Distribution by Year") +
-  labs(
-    x = "",
-    y = "Count of Surveyors",
-    fill = "Year"
-  ) +
+  labs( x = "", y = "Count of Surveyors", fill = "Year" ) +
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+grid.arrange(p1, p2, ncol = 2, widths = c(2, 1.5))
+
 ```
 
-### Salaries by Year, by Language
+### Salaries by Year and Language
 
 Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes:
 
@@ -105,12 +113,9 @@ The violin plot below illustrates the salary distributions for each language in 
 ```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE}
 # create a new dataframe 
 salary_languages_df <- long_stack %>%
-  # we're not using 2017 since the salaries are not in USD
-  filter(Year %in% 2018:2022) %>%
-  # filter so only full time employees are included
+  filter(Year %in% 2018:2022) %>% # not 2017, not in USD
   filter(str_detect(Employment, "full")) %>%
-  # remove outliers (there are a few outliers with $500k+ salary, majority of the distributions are below 500k)
-  filter(AnnualSalary < 500000) %>%
+  filter(AnnualSalary < 500000) %>%   # remove suspect outliers 
   select(Year, Age, Gender, AnnualSalary, Language, Employment) 
 
 # Filter out rows with missing AnnualSalary
@@ -122,24 +127,18 @@ ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)
   # to show each year uncomment below
   facet_wrap(~Year) +
   theme(plot.title = element_text(hjust = 0.5)) +
-  ggtitle(
-    "Distribution of Salaries for Each Language"
-  ) +
-  labs(
-    x = "", 
-    y = "Annual Salary (USD)"
-  ) +
+  ggtitle( "Distribution of Salaries for Each Language" ) +
+  labs(x = "", y = "Annual Salary (USD)") +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    # remove the legend
     legend.position = "none")
 ```
 
+---
 
 ## How does organization size relate to the number of years professionally coding?
 
-```{r}
-
+```{r ggplot_avg_org_size_by_code_prof}
 ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
   geom_point() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -147,35 +146,31 @@ ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
 
 ```
 
+### The Programming Languages of Data Science: Conclusions
 
-### Conclusions
+People of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
 
-It appears that people of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
+---
 
 ## Salaries
 
 ### Salaries by Country
 
-
 ```{r}
 
-AvgSalaries <- wide_stack |> 
+wide_stack |> 
   filter(!is.na(AnnualSalary)) |> 
   group_by(Country) |> 
   summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) |>
-  arrange(desc(AvgSalary)) |>
-  head(n = 11)
-
-
-ggplot(AvgSalaries, aes(x = Country, y = AvgSalary)) +
+  arrange(-AvgSalary) |>  
+  head(n = 15) |>  
+  ggplot(aes(x = reorder(Country, AvgSalary), y = AvgSalary)) + 
   geom_bar(stat = "identity", position = "dodge") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top 10 Average Salaries by Country")
-
+  ggtitle("Top Average Salaries by Country")
 ```
 
 ### Salaries by Developer Type
-
 
 ```{r}
 tempWideStack <- wide_stack
@@ -200,19 +195,18 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
 
 ```{r}
 
-AvgSalaries <- tempWideStack |> 
+tempWideStack |> 
   filter(!is.na(AnnualSalary)) |> 
   group_by(DevType) |>
   filter((Country == "United States") | (Country == "United States of America")) |>
   summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) |>
   arrange(desc(AvgSalary)) |>
-  head(n = 20)
-
-ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
+  head(n = 20) |>
+  ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +  # Note: I added reorder() here for ordering in the plot
   geom_bar(stat = "identity", position = "dodge") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   ggtitle("Top 20 Average Salaries in the U.S. by Developer Type")
-
+  
 ```
 
 ### Average Salaries in the U.S. by Developer Type (minus blockchain)
@@ -239,9 +233,7 @@ Let's examine whether age has an influence on salary. We will need to filter for
 We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey. It's possible that older professionals in the industry are less inclined to engage with Stack Overflow.
 
 ```{r, message = FALSE, warning = FALSE}
-wide_stack$Age <- as.numeric(wide_stack$Age)
-# create a new data frame that groups ages into a range
-age_vs_salary <- wide_stack %>%
+wide_stack %>%
   # filter out 2017 since the salaries are not in USD
   filter(Year %in% 2018:2022) %>%
   # filter so only full time employees are included
@@ -250,20 +242,16 @@ age_vs_salary <- wide_stack %>%
   filter(!is.na(Age)) %>%
   # create age group categories
   mutate(Age_Group = cut(Age,
-                    breaks = c(18, seq(23, 65, by = 5)),  # Create breaks from 18 to 65 in increments of 5
-                    labels = paste(seq(18, 60, by = 5), seq(23, 65, by = 5), sep = "-"),
-                    right = FALSE)) %>%
-  na.exclude(Age_Group) %>%
-  select(Year, Age_Group, Gender, AnnualSalary)
-
-ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
+                         breaks = c(18, seq(23, 65, by = 5)),  # Create breaks from 18 to 65 in increments of 5
+                         labels = paste(seq(18, 60, by = 5), seq(23, 65, by = 5), sep = "-"),
+                         right = FALSE)) %>%
+  # Select required columns
+  select(Year, Age_Group, Gender, AnnualSalary) %>%
+  # Directly pipe into ggplot
+  ggplot(aes(x = Age_Group, y = AnnualSalary)) +
   geom_point() +
   ggtitle("Age vs. Annual Salary") +
-  labs(
-    x = "Age Group",
-    y = "Annual Salary (USD)"
-  ) +
-  # center title
+  labs(x = "Age Group", y = "Annual Salary (USD)") +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
@@ -272,6 +260,7 @@ ggplot(age_vs_salary, aes(x = Age_Group, y = AnnualSalary)) +
 
 Monaco and Afghanistan were the countries with the two highest average annual salaries. Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Specifically in the U.S., blockchain developers also had the highest average annual salaries. Like the rest of the world, project managers and senior executives had the highest annual salaries out of all the job titles.
 
+---
 
 ## Job status and degree type
 
@@ -280,45 +269,47 @@ Monaco and Afghanistan were the countries with the two highest average annual sa
 It seems that the most number of people have a Bachelor's degree and are employed full-time. People are most likely to be employed full-time if they have a Bachelor's degree, Master's degree, or completed some college. Also, people who have a Bachelor's degree are more likely to be self-employed than any other degree. People who only completed high school are most likely to be unemployed. Since most people who took the survey had Bachelor's degrees based on these counts, it may have skewed the results. Also, people are more likely to take this survey if they are employed because they may use Stack Overflow to help them while working at their job.
 
 ```{r}
-jobsAndDegrees <- data.frame(JobStatus = tempWideStack$Employment,
-                             Degree = tempWideStack$EdLevel)
 
-jobsAndDegrees$JobStatus <- gsub(".*Employed, full-time.*","Employed, full-time",jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*Employed, part-time.*","Employed, part-time",jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*Not employed.*","Not employed",jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*self-employed.*","Self-employed",jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*I prefer not to say.*",NA,jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*Retired.*","Retired",jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*Student.*","Student",jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*Employed part-time.*","Employed, part-time",jobsAndDegrees$JobStatus)
-jobsAndDegrees$JobStatus <- gsub(".*Employed full-time.*","Employed, full-time",jobsAndDegrees$JobStatus)
+degree_order <- c("High School", "Some college", "Associate's", "Bachelor's", "Professional", "Master's", "Doctorate")
 
-jobsAndDegrees$Degree <- gsub(".*Associate.*","Associate's",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Bachelor.*","Bachelor's",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Master.*","Master's",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*doctoral.*","Doctorate",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Bachelor.*","Bachelor's",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Some college.*","Some college",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Doctoral.*","Doctorate",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Secondary.*","High School",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*prefer.*",NA,jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*never.*", NA, jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Professional.*","Professional",jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Primary.*",NA,jobsAndDegrees$Degree)
-jobsAndDegrees$Degree <- gsub(".*Something.*",NA,jobsAndDegrees$Degree)
-
-jobsAndDegrees <- jobsAndDegrees |>
-  filter(!is.na(Degree)) |>
-  filter(!is.na(JobStatus))
-ggplot(jobsAndDegrees, aes(Degree, ..count..)) + 
+tempWideStack %>%
+  select(JobStatus = Employment, Degree = EdLevel) %>%
+  mutate(
+    JobStatus = case_when(
+      grepl("Employed, full-time", JobStatus) ~ "Employed, full-time",
+      grepl("Employed, part-time", JobStatus) ~ "Employed, part-time",
+      grepl("Not employed", JobStatus) ~ "Not employed",
+      grepl("self-employed", JobStatus) ~ "Self-employed",
+      grepl("I prefer not to say", JobStatus) ~ NA_character_,
+      grepl("Retired", JobStatus) ~ "Retired",
+      grepl("Student", JobStatus) ~ "Student",
+      TRUE ~ JobStatus
+    ),
+    Degree = case_when(
+      grepl("Associate", Degree) ~ "Associate's",
+      grepl("Bachelor", Degree) ~ "Bachelor's",
+      grepl("Master", Degree) ~ "Master's",
+      grepl("doctoral", Degree) ~ "Doctorate",
+      grepl("Some college", Degree) ~ "Some college",
+      grepl("Secondary", Degree) ~ "High School",
+      grepl("Professional", Degree) ~ "Professional",
+      grepl("prefer|never|Primary|Something", Degree) ~ NA_character_,
+      TRUE ~ Degree
+    )
+  ) %>%
+  filter(!is.na(Degree), !is.na(JobStatus)) %>%
+  mutate(Degree = factor(Degree, levels = degree_order)) %>%
+  ggplot(aes(Degree, ..count..)) + 
   geom_bar(aes(fill = JobStatus), position = "dodge") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Count of People with a Specific Job Status by Degree")
-
-  
+  labs(title = "Count of People with a Specific Job Status by Degree",
+       x = "Degree",
+       y = "Count of People") +
+  scale_fill_brewer(palette = "Set3")
 ```
+---
 
-## Gender and Language
+## Gender and Programming Languages
 
 Surveyors in Average Salary Calculation
 
@@ -407,9 +398,11 @@ counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
 counts_avg_salaries_tbl
 ```
 
-## Case Studies:
+---
 
-### Scala or Python or Both by Gender
+## Scala And Python Case Study
+
+### Either or Both? And by Gender
 
 Is there a financial advantage to having proficiency in both Python and Scala compared to solely knowing Scala or Python?
 
@@ -467,8 +460,7 @@ ggplot(scala_python, aes(x = status, y = AvgSalary, fill = Gender)) +
 
 ```
 
-### Scala and Python Time
-
+### Over Time
 
 ```{r salary over time }
 
@@ -516,9 +508,6 @@ wide_stack_no2017US<-wide_stack_no2017US%>%filter(wide_stack_no2017US$EdLevel %i
 
 ### Level of Education Years
 
-stuff goes here
-
-
 ```{r}
 
 df_scala_python_edlevel <- bind_rows(
@@ -560,5 +549,10 @@ ggplot(df_scala_python_edlevel,aes(x=Year,y=AvgSalary, color=`Level of Education
 
 From the above graphs, we can infer that knowing a combination of the two languages will likely result in a higher salary and despite a drop in the salaries of python developers from 2019 to 2021 there is marked growth in salaries in all areas of expertise in the past 2 years in the United States. The growth of salaries is also seen across all levels of education roughly since 2021. Although the nature of this growth is not entirely clear because the survey was based on individuals self reporting their education.
 
+---
 
-## Sources
+## Links, Sources and URLS
+
+[The Stack Overflow Survey](https://insights.stackoverflow.com/survey)
+[Main Project Github](https://github.com/tonythor/krijudato/)
+[RPubs](rpubs hyperlink) 
