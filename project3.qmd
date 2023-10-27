@@ -1,5 +1,5 @@
 ---
-title: "Finding Value within the Data Science Industry"
+title: "Finding Value Within the Data Science Industry"
 author: "Team Krijudato"
 date: "October 29, 2023"
 output:
@@ -19,19 +19,18 @@ editor_options:
 
 ---
 
-### Project Overview
+#### Project Overview
 ![](./images/overview.svg)
 
 ---
 
-### Data Engineering Overview
+#### Data Engineering Overview
 
-Our data engineerging pipeline does four things.
+Our data engineering pipeline does three things.
 
-1. For each year, download raw survey data from our s3 cache.
-2. Normalize the structure of each year, minor cleaning, tehn union together. 
-3. Explode wide certain multivalue columns, like "PlatformWorkedWith" which contains both AWS and Google Cloud.
-4. Save the CSV file in the root directory so the markdown can load it from cache.
+1. For each year, download raw survey data from our s3 cache. Unify and coalesce columns on each year, and then union together.    
+2. Explode wide certain multi-value columns. For example, "PlatformWorkedWith" contains both AWS and Google Cloud.
+3. Save the CSV file in the root directory so the markdown can load it from cache.
 
 [funcitons.r](https://github.com/tonythor/krijudato/blob/develop/functions.r) contains our data engineering pipeline code.
 
@@ -39,7 +38,7 @@ Also, to prepare for this project, we had to do a column analysis. If you'd like
 
 ---
 
-_load and prepare base data..._
+_load and prepare base data for this markdown file..._
 
 ```{r, globaloptions, warning = FALSE, message = FALSE, output=FALSE}
 packages <- c("dplyr","tidyr", "ggplot2", "stringr", "gt", "gridExtra")
@@ -80,13 +79,12 @@ language_growth <- long_stack %>%
   summarise(Count = n())
 
 p1 <- ggplot(language_growth, aes(x = Year, y= Count, color = Language)) +
-  geom_line() +
+  geom_line(size = 2) +
   ggtitle("Language Use Over Time") + 
   labs( x = "Year", y = "Count of Surveyors" ) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
-# Second plot
 p2 <- ggplot(long_stack, aes(x = Language, fill = factor(Year))) +
   geom_bar(position = "dodge", width = 0.7) +
   ggtitle("Language Distribution by Year") +
@@ -99,7 +97,7 @@ grid.arrange(p1, p2, ncol = 2, widths = c(2, 1.5))
 
 ```
 
-### Salaries by Year and Language
+### Languages pay over time
 
 Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes:
 
@@ -111,40 +109,25 @@ Let's now look at the distribution of salaries over the years. We will need to c
 The violin plot below illustrates the salary distributions for each language in each year. From the plot, it's apparent that Scala has consistently held the highest average salary among the six languages since 2018.
 
 ```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE}
-# create a new dataframe 
-salary_languages_df <- long_stack %>%
-  filter(Year %in% 2018:2022) %>% # not 2017, not in USD
+long_stack %>%
+  filter(Year %in% 2018:2022) %>%
   filter(str_detect(Employment, "full")) %>%
-  filter(AnnualSalary < 500000) %>%   # remove suspect outliers 
-  select(Year, Age, Gender, AnnualSalary, Language, Employment) 
-
-# Filter out rows with missing AnnualSalary
-salary_languages_df <- salary_languages_df[!is.na(salary_languages_df$AnnualSalary), ]
-
-# create plot
-ggplot(salary_languages_df, aes(x = Language, y = AnnualSalary, fill = Language)) +
-  geom_violin() +
-  # to show each year uncomment below
-  facet_wrap(~Year) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  ggtitle( "Distribution of Salaries for Each Language" ) +
-  labs(x = "", y = "Annual Salary (USD)") +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = "none")
+  filter(AnnualSalary < 500000) %>%
+  filter(!is.na(AnnualSalary)) %>%
+  select(Year, Age, Gender, AnnualSalary, Language, Employment) %>%
+  ggplot(aes(x = Language, y = AnnualSalary, fill = Language)) +
+    geom_violin() +
+    facet_wrap(~Year) +
+    theme(
+      plot.title = element_text(hjust = 0.5),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none"
+    ) +
+    ggtitle("Distribution of Salaries for Each Language") +
+    labs(x = "", y = "Annual Salary (USD)")
 ```
 
 ---
-
-## How does organization size relate to the number of years professionally coding?
-
-```{r ggplot_avg_org_size_by_code_prof}
-ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
-  geom_point() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Average Organization Size by Average Number of Years Coding Professionally")
-
-```
 
 ### The Programming Languages of Data Science: Conclusions
 
@@ -156,23 +139,26 @@ People of all coding experience work for organizations of all different sizes. M
 
 ### Salaries by Country
 
-```{r}
-
-wide_stack |> 
-  filter(!is.na(AnnualSalary)) |> 
-  group_by(Country) |> 
-  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) |>
-  arrange(-AvgSalary) |>  
-  head(n = 15) |>  
-  ggplot(aes(x = reorder(Country, AvgSalary), y = AvgSalary)) + 
-  geom_bar(stat = "identity", position = "dodge") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top Average Salaries by Country")
+```{r sal_by_country}
+wide_stack %>%
+  filter(!is.na(AnnualSalary)) %>%
+  mutate(Country = 
+    str_replace_all(Country, "United Kingdom of Great Britain and Northern Ireland", "Great Britain")) %>%
+  mutate(Country = 
+    str_replace_all(Country, "United States of America", "USA")) %>%
+  group_by(Country) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  arrange(-AvgSalary) %>%
+  head(n = 15) %>%
+  ggplot(aes(x = reorder(Country, -AvgSalary), y = AvgSalary)) + 
+    geom_bar(stat = "identity", position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    ggtitle("Average Salaries by Country/Region")
 ```
 
 ### Salaries by Developer Type
 
-```{r}
+```{r sal_by_developer_type}
 tempWideStack <- wide_stack
 tempWideStack[c('DevType', 'To.Delete')] <- str_split_fixed(tempWideStack$DevType, ';', 2)
 tempWideStack <- tempWideStack[,-45]
@@ -193,7 +179,7 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
 
 ### Average Salaries in the U.S. by Developer Type
 
-```{r}
+```{r sal_us_developer_type}
 
 tempWideStack |> 
   filter(!is.na(AnnualSalary)) |> 
@@ -219,6 +205,26 @@ ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
   geom_bar(stat = "identity", position = "dodge") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   ggtitle("Top 19 Average Salaries in the U.S. by Developer Type", subtitle = "Excluding Blockchain Developers")
+
+```
+
+```{r}
+# tempWideStack <- wide_stack
+# tempWideStack[c('DevType', 'To.Delete')] <- str_split_fixed(tempWideStack$DevType, ';', 2)
+# tempWideStack <- tempWideStack[,-45]
+
+# AvgSalaries <- tempWideStack |> 
+#   filter(!is.na(AnnualSalary)) |> 
+#   group_by(DevType) |> 
+#   summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) |>
+#   arrange(desc(AvgSalary)) |>
+#   head(n = 20)
+
+# AvgSalaries <- AvgSalaries |> filter(DevType != "Blockchain")
+# ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
+#   geom_bar(stat = "identity", position = "dodge") +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   ggtitle("Top 19 Average Salaries in the U.S. by Developer Type", subtitle = "Excluding Blockchain Developers")
 
 ```
 
@@ -262,7 +268,18 @@ Monaco and Afghanistan were the countries with the two highest average annual sa
 
 ---
 
-## Job status and degree type
+## Job status, Organization, and Degree Type 
+
+## Organization Size related Years Coding 
+
+```{r ggplot_avg_org_size_by_code_prof}
+ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Average Organization Size by Average Number of Years Coding Professionally")
+
+```
+
 
 ### Count of People with a Specific Job Status by Degree
 
