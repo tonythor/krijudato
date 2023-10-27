@@ -19,12 +19,12 @@ editor_options:
 
 ---
 
-#### Project Overview
+#### Project overview
 ![](./images/overview.svg)
 
 ---
 
-#### Data Engineering Overview
+#### Data engineering overview
 
 Our data engineering pipeline does three things.
 
@@ -103,18 +103,13 @@ grid.arrange(p1, p2, ncol = 2, widths = c(2, 1.5))
 
 Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes:
 
--   includes years 2018 to 2022, as 2017's salary data is not in USD
--   includes only those who work full time
--   removes those who make over \$500,000, as the majority of the distributions are below this amount
--   remove those who did not input a salary
-
 The violin plot below illustrates the salary distributions for each language in each year. From the plot, it's apparent that Scala has consistently held the highest average salary among the six languages since 2018.
 
 ```{r distribution-of-salaries-over-years-df, message = FALSE, warning = FALSE}
 long_stack %>%
   filter(Year %in% 2018:2022) %>%
   filter(str_detect(Employment, "full")) %>%
-  filter(AnnualSalary < 500000) %>%
+  filter(AnnualSalary < 500000) %>% # removal of outliers
   filter(!is.na(AnnualSalary)) %>%
   select(Year, Age, Gender, AnnualSalary, Language, Employment) %>%
   ggplot(aes(x = Language, y = AnnualSalary, fill = Language)) +
@@ -129,7 +124,7 @@ long_stack %>%
     labs(x = "", y = "Annual Salary (USD)")
 ```
 
-### The Programming Languages of Data Science: Conclusions
+### The programming languages of data science: Conclusions
 
 People of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
 
@@ -137,7 +132,7 @@ People of all coding experience work for organizations of all different sizes. M
 
 ## Salaries
 
-### by Country
+### By Country
 
 ```{r sal_by_country}
 wide_stack %>%
@@ -156,7 +151,7 @@ wide_stack %>%
     ggtitle("Average Salaries by Country/Region")
 ```
 
-### by Developer Type
+### By Developer Type
 
 ```{r sal_by_developer_type}
 wide_stack %>%
@@ -174,7 +169,7 @@ wide_stack %>%
 
 ```
 
-### by Developer Type, US Only
+### By developer type, US Only
 
 ```{r sal_us_developer_type, message = FALSE, warning = FALSE}
 wide_stack %>%
@@ -193,7 +188,7 @@ wide_stack %>%
   
 ```
 
-### by Developer Type, US Only, minus blockchain
+### By developer type, US Only, minus blockchain
 
 ```{r excludingBlockchain, message = FALSE, warning = FALSE}
 
@@ -213,7 +208,7 @@ wide_stack %>%
 
 ```
 
-### Salary vs Age
+### Salary vs age
 
 We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey. 
 
@@ -241,10 +236,9 @@ Monaco and Afghanistan were the countries with the two highest average annual sa
 
 ---
 
-## Job status, Organization, and Degree Type 
+## Status, Degrees, and Org Size
 
-
-### Job Status by Degree
+### Employment Status by degrees
 
 People are most likely to be employed full-time if they have a Bachelor's degree, Master's degree, or completed some college. Also, people who have a Bachelor's degree are more likely to be self-employed than any other degree. People who only completed high school are most likely to be unemployed. Since most people who took the survey had Bachelor's degrees based on these counts, it may have skewed the results. Also, people are more likely to take this survey if they are employed because they may use Stack Overflow to help them while working at their job.
 
@@ -289,7 +283,7 @@ wide_stack %>%
 ```
 
 
-###  Organization Size related Years Coding 
+###  Organization size to years coding 
 
 ```{r ggplot_avg_org_size_by_code_prof,  message = FALSE, warning = FALSE}
 ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
@@ -299,11 +293,12 @@ ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
   labs(x = "Years coding", y = "Org Size")
 ```
 
+
 ---
 
 ## Gender and Programming Languages
 
-### Gender, Salary and Language
+### Gender, salary and language
 
 The below plot illustrates the average salary per gender for each distinct language.
 
@@ -335,13 +330,13 @@ wide_stack %>%
   coord_flip()
 ```
 
-### Count of Surveyors Table
+### Gender and language within surveyors
 
 From the previous graph, we see that the average female salary for Scala is an outlier, with its average salary being over \$400,000. To investigate this further, we will construct a table displaying the respondent counts for each scenario.
 
 From the table below, it's apparent that there are only four females in this specific dataset who are proficient in Julia. When considering the actual population of females who exclusively know Julia, this dataset may not provide an accurate representation of their salaries. A similar inference could be made for Scala, as there are only 27 females who exclusively know Scala in contrast to 506 men. However, it's important to note that this dataset accurately reflects the salaries of females who participated in the Stack Overflow survey. In other words, these average salaries are representative of the sample of females who completed the survey, but not the true population of females who know Scala and Julia.
 
-```{r count_of_surveyors_new}
+```{r count_of_surveyors_new, warning = FALSE, message = FALSE}
  wide_stack %>%
   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
   mutate(KnownLanguage = case_when(
@@ -374,253 +369,106 @@ From the table below, it's apparent that there are only four females in this spe
     Count = md("**Count**")
   )
 
-# # show table
-# counts_avg_salaries_tbl
-
-```
-
-
-```{r count_of_surveyors, echo=FALSE}
-
-# counts_avg_salaries <- wide_stack %>%
-#   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
-#   mutate(KnownLanguage = case_when(
-#     python == "yes" ~ "python",
-#     sql == "yes" ~ "sql",
-#     java == "yes" ~ "java",
-#     scala == "yes" ~ "scala",
-#     r == "yes" ~ "r",
-#     julia == "yes" ~ "julia",
-#     TRUE ~ "unknown"
-#   )) %>%
-#   filter(KnownLanguage != "unknown") %>%
-#   filter(Year %in% 2018:2022) %>%
-#   filter(str_detect(Employment, "full")) %>%
-#   filter(Gender %in% c("Female", "Male")) %>%
-#   filter(!is.na(AnnualSalary)) %>%
-#   group_by(Gender, KnownLanguage) %>%
-#   mutate(Count = n()) %>%
-#   select(KnownLanguage, Gender, Count) %>%
-#   distinct() %>%
-#   arrange(KnownLanguage) %>%
-#   ungroup() %>%
-#   as.data.frame()
-
-# # create gt table
-# counts_avg_salaries_tbl <- gt(counts_avg_salaries) 
-# counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
-#   tab_header(
-#     title = md("**Count of Surveyors in Average Salary Calculation**")
-#   ) |>
-#   cols_label(
-#     KnownLanguage = md("**Language**"),
-#     Gender = md("**Gender**"),
-#     Count = md("**Count**")
-#   )
-
-# # show table
-# counts_avg_salaries_tbl
-
-```
-
-```{r echo=FALSE}
-
-# onelanguage_df <- wide_stack %>%
-#   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
-#   # create a new column with the one language each person knows
-#   mutate(KnownLanguage = case_when(
-#     python == "yes" ~ "python",
-#     sql == "yes" ~ "sql",
-#     java == "yes" ~ "java",
-#     scala == "yes" ~ "scala",
-#     r == "yes" ~ "r",
-#     julia == "yes" ~ "julia",
-#     TRUE ~ "unknown"  # Handle cases where no language is known
-#   )) %>%
-#   # remove the cases where no language is known
-#   filter(KnownLanguage != "unknown") %>%
-#   # we're not using 2017 since the salaries are not in USD
-#   filter(Year %in% 2018:2022) %>%
-#   # filter so only full time employees are included
-#   filter(str_detect(Employment, "full")) %>%
-#   select(Year, Gender, Employment, AnnualSalary, KnownLanguage)
-
-# # create a table of the counts
-# counts_avg_salaries <- onelanguage_df %>%
-#   filter(Gender %in% c("Female", "Male")) %>%
-#   filter(!is.na(AnnualSalary)) %>%
-#   group_by(Gender, KnownLanguage) %>%
-#   mutate(Count = n()) %>%
-#   select(KnownLanguage, Gender, Count) %>%
-#   distinct() %>% 
-#   arrange(KnownLanguage) %>%
-#   as.data.frame()
-
-# # create gt table
-# counts_avg_salaries_tbl <- gt(counts_avg_salaries) 
-  
-# counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
-#   tab_header(
-#     title = md("**Count of Surveyors in Average Salary Calculation**")
-#   ) |>
-#   cols_label(
-#     KnownLanguage = md("**Language**"),
-#     Gender = md("**Gender**"),
-#     Count = md("**Count**")
-#   )
-
-# # show table
-# counts_avg_salaries_tbl
 ```
 
 ---
 
-## Scala And Python Case Study
+## Case Study: Scala and Python
 
-### Either or Both? And by Gender
+### Either, or both?
 
-Is there a financial advantage to having proficiency in both Python and Scala compared to solely knowing Scala or Python?
+Is there a financial advantage to having proficiency in both Python and Scala compared to solely knowing Scala or Python? Based on the below graph, we can infer that knowing a combination of the two languages will likely result in a higher salary.
 
-In order to answer this question, we will need to create a new data frame that does the following:
-
--   filters for years 2018 - 2022, as 2017's salaries are not in USD
--   filter for instances where people know both Scala & Python
--   filter for instances where people know Scala, but not Python
--   filter for instances where people know Python, but not Scala
--   filter for full time employees only
-
-Based on the below graph, we can infer that knowing a combination of the two languages will likely result in a higher salary.
-
-```{r scala-and-python-combinations-df, message = FALSE, warning = FALSE, echo = FALSE}
-wide_stack_no2017 <- wide_stack %>%
+```{r, warning = FALSE, message = FALSE}
+wide_stack %>%
   # filter for years 2018-2022, since 2017 is not in USD
-  filter(Year %in% 2018:2022)
-
-scala_python <- bind_rows(
-  wide_stack_no2017 %>%
-    # Filter for people who know both Python & Scala
-    filter(python == "yes" & scala == "yes") %>%
-    # Filter so only full-time employees are included
-    filter(str_detect(Employment, "full")) %>%
-    select(Year, Gender, AnnualSalary) %>%
-    mutate(status = "both"),
-  
-  wide_stack_no2017 %>%
-    # Filter for people who know python, but not scala
-    filter(python == "yes" & scala == "no") %>%
-    # Filter so only full-time employees are included
-    filter(str_detect(Employment, "full")) %>%
-    select(Year, Gender, AnnualSalary) %>%
-    mutate(status = "python"),
-  
-  wide_stack_no2017 %>%
-    # Filter for people who know scala, but not python
-    filter(python == "no" & scala == "yes") %>%
-    # Filter so only full-time employees are included
-    filter(str_detect(Employment, "full")) %>%
-    select(Year, Gender, AnnualSalary) %>%
-    mutate(status = "scala")
-) %>%
+  filter(Year %in% 2018:2022) %>%
+  filter(str_detect(Employment, "full")) %>%
   filter(Gender %in% c("Female", "Male")) %>%
+  mutate(status = case_when(
+    python == "yes" & scala == "yes" ~ "both",
+    python == "yes" & scala == "no" ~ "python",
+    python == "no" & scala == "yes" ~ "scala",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(status)) %>%
   group_by(status, Gender) %>%
-  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE), .groups = "drop")
-
-ggplot(scala_python, aes(x = status, y = AvgSalary, fill = Gender)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  ggtitle("Average Salaries for\nScala/Python Combinations") +
-  labs(x = "Combination", y = "Average Salary") +
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE), .groups = "drop") %>%
+  # Plot
+  ggplot(aes(x = status, y = AvgSalary, fill = Gender)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    ggtitle("Average Salaries for\nScala/Python Combinations") +
+    labs(x = "Combination", y = "Average Salary") +
   # center title
-  theme(plot.title = element_text(hjust = 0.5)) +
-  theme_minimal() 
-
+    theme(plot.title = element_text(hjust = 0.5)) +
+    theme_minimal()
 ```
 
-### Over Time
+### Both, over time
 
-```{r salary over time }
+```{r salary over time, warning = FALSE, message = FALSE }
 
-df_scala_pythonYearSalary <- bind_rows(
-  wide_stack_no2017 %>%
-    # Filter for people who know both Python & Scala
-    filter(python == "yes" & scala == "yes") %>%
-    # Filter so only full-time employees are included
-    filter(str_detect(Employment, "full")) %>%
-    select(Year, AnnualSalary) %>%
-    mutate(status = "both"),
-  
-  df_python<-wide_stack_no2017%>%
-    # Filter for people who know python, but not scala
-    filter(python == "yes" & scala == "no") %>%
-    # Filter so only full-time employees are included
-    filter(str_detect(Employment, "full")) %>%
-     select(Year, AnnualSalary) %>%
-    mutate(status = "python"),
-  
-   df_scala <- wide_stack_no2017 %>%
-    # Filter for people who know scala, but not python
-    filter(python == "no" & scala == "yes") %>%
-    # Filter so only full-time employees are included
-    filter(str_detect(Employment, "full")) %>%
-    select(Year, AnnualSalary)|>
-    mutate(status = "scala")
-)%>%
-  group_by(Year, status)%>%
-summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE), .groups = "drop")
-
-colnames(df_scala_pythonYearSalary)[colnames(df_scala_pythonYearSalary) == "status"] <- "Area of Expertise"
-ggplot(df_scala_pythonYearSalary,aes(x=Year,y=AvgSalary,size=.3, color=`Area of Expertise`))+geom_path()+ ggtitle("Average Salaries for Scala/Python Combinations (USA) Years 2018-2022\n") +labs(y="Average Salary In USD" ,x="Year")
+wide_stack %>%
+  filter(Year %in% 2018:2022) %>%
+  filter(str_detect(Employment, "full")) %>%
+  mutate(status = case_when(
+    python == "yes" & scala == "yes" ~ "both",
+    python == "yes" & scala == "no" ~ "python",
+    python == "no" & scala == "yes" ~ "scala"
+  )) %>%
+  select(Year, AnnualSalary, status) %>%
+  group_by(Year, status) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE), .groups = "drop") %>%
+  rename(`Area of Expertise` = status) %>%
+  ggplot(aes(x = Year, y = AvgSalary, color = `Area of Expertise`)) +
+    geom_path(size=2) +
+    ggtitle("Average Salaries for Scala/Python Combinations") +
+    labs(y = "Average Salary In USD", x = "Year")
 ```
 
-```{r}
-wide_stack_no2017$EdLevel<-gsub(r"{\s*\([^\)]+\)}","",as.character(wide_stack_no2017$EdLevel))
-wide_stack_no2017US<-wide_stack_no2017%>%filter(str_detect(Country, "United States")) 
-EdLevels<-c("Associate degree","Bachelor’s degree","Some college/university study without earning a degree", "Master’s degree","Other doctoral degree","Professional degree")
-wide_stack_no2017US<-wide_stack_no2017US%>%filter(wide_stack_no2017US$EdLevel %in% EdLevels)
+### Both, by education level
 
+```{r bothByDegree}
+EdLevels <- c("Associate degree", "Bachelor’s degree", "Some college/university study without earning a degree", "Master’s degree", "Other doctoral degree", "Professional degree")
 
-```
+wide_stack_no2017US <- wide_stack %>%
+  filter(Year %in% 2018:2022) %>%
+  mutate(EdLevel = gsub(r"{\s*\([^\)]+\)}", "", as.character(EdLevel))) %>%
+  filter(str_detect(Country, "United States") & EdLevel %in% EdLevels)
 
-
-### Level of Education Years
-
-```{r}
-
+# Create a new dataset with specific conditions
 df_scala_python_edlevel <- bind_rows(
   wide_stack_no2017US %>%
-    # Filter for people who know both Python & Scala
     filter(python == "yes" & scala == "yes") %>%
-    # Filter so only full-time employees are included
     filter(str_detect(Employment, "full")) %>%
     select(Year, EdLevel, Country, AnnualSalary) %>%
     mutate(status = "both"),
   
   wide_stack_no2017US %>%
-    # Filter for people who know python, but not scala
     filter(python == "yes" & scala == "no") %>%
-    # Filter so only full-time employees are included
     filter(str_detect(Employment, "full")) %>%
     select(Year, EdLevel, Country, AnnualSalary) %>%
     mutate(status = "python"),
   
   wide_stack_no2017US %>%
-    # Filter for people who know scala, but not python
     filter(python == "no" & scala == "yes") %>%
-    # Filter so only full-time employees are included
     filter(str_detect(Employment, "full")) %>%
     select(Year, EdLevel, Country, AnnualSalary) %>%
     mutate(status = "scala")
 ) %>%
-  group_by(EdLevel,Year) %>%
+  group_by(EdLevel, Year) %>%
   summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE), .groups = "drop")
 
+# Clean up the dataset by removing NA values
 df_scala_python_edlevel <- df_scala_python_edlevel[complete.cases(df_scala_python_edlevel), ]
 colnames(df_scala_python_edlevel)[colnames(df_scala_python_edlevel) == "EdLevel"] <- "Level of Education"
-```
 
-```{r}
-ggplot(df_scala_python_edlevel,aes(x=Year,y=AvgSalary, color=`Level of Education`,size=.3))+ geom_path()+ggtitle("Average Salaries for Scala and Python (USA) By Level of Education Years  2018-2022\n")+labs(y="Average Salary in USD" ,x="Year")
+# Plot the data
+ggplot(df_scala_python_edlevel, aes(x = Year, y = AvgSalary, color = `Level of Education`, group = `Level of Education`)) + 
+  geom_line() + 
+  ggtitle("Average Salaries for Scala and Python (USA) By Level of Education") +
+  labs(y = "Average Salary in USD", x = "Year")
 ```
-
 
 From the above graphs, we can infer that knowing a combination of the two languages will likely result in a higher salary and despite a drop in the salaries of python developers from 2019 to 2021 there is marked growth in salaries in all areas of expertise in the past 2 years in the United States. The growth of salaries is also seen across all levels of education roughly since 2021. Although the nature of this growth is not entirely clear because the survey was based on individuals self reporting their education.
 
@@ -629,5 +477,7 @@ From the above graphs, we can infer that knowing a combination of the two langua
 ## Links, Sources and URLS
 
 [The Stack Overflow Survey](https://insights.stackoverflow.com/survey)
+
 [Main Project Github](https://github.com/tonythor/krijudato/)
+
 [RPubs](rpubs hyperlink) 
