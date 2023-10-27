@@ -17,28 +17,59 @@ editor_options:
   chunk_output_type: console
 ---
 
----
+------------------------------------------------------------------------
+
+## Introduction
+
+Beginning in 2011, Stack Overflow has conducted an annual survey for developers to participate in. This survey provides insights on a wide variety of topics, such as employment status, annual salary, language knowledge, location, and much more.
+
+As aspiring data scientists, we aim to answer the following questions:
+
+-   What are the most popular programming languages?
+
+-   What are the highest paying programming languages?
+
+-   Do certain developer types make more money than others?
+
+-   Do different regions make more money than others?
+
+-   Does age have an impact on salary?
+
+-   Are people more likely to be employed full-time if they have a higher level degree?
+
+-   Is there a gender wage gap in the industry?
+
+-   Do larger companies hire more experienced people?
+
+-   Does knowing more than one language increase your salary?
+
+-   Does having a higher level degree impact your salary?
+
+In this project, we will use the Stack Overflow survey data to answer the above questions, and hopefully provide more insight to our fellow aspiring data scientists.
+
+------------------------------------------------------------------------
 
 #### Project overview
+
 ![](./images/overview.svg)
 
----
+------------------------------------------------------------------------
 
 #### Data engineering overview
 
 Our data engineering pipeline does three things.
 
-1. For each year, download raw survey data from our s3 cache. Unify and coalesce columns on each year, and then union together.    
-2. Explode wide certain multi-value columns. For example, "PlatformWorkedWith" contains both AWS and Google Cloud.
-3. Save the CSV file in the root directory so the markdown can load it from cache.
+1.  For each year, download raw survey data from our s3 cache. Unify and coalesce columns on each year, and then union together.\
+2.  Explode wide certain multi-value columns. For example, "PlatformWorkedWith" contains both AWS and Google Cloud.
+3.  Save the CSV file in the root directory so the markdown can load it from cache.
 
 [funcitons.r](https://github.com/tonythor/krijudato/blob/develop/functions.r) contains our data engineering pipeline code.
 
 Also, to prepare for this project, we had to do a column analysis. If you'd like to see what went into that, review and run our [admin.r](https://github.com/tonythor/krijudato/blob/develop/admin.r) file.
 
----
+------------------------------------------------------------------------
 
-_load and prepare base data for this markdown file..._
+*load and prepare base data for this markdown file...*
 
 ```{r, globaloptions, warning = FALSE, message = FALSE, output=FALSE}
 packages <- c("dplyr","tidyr", "ggplot2", "stringr", "gt", "gridExtra")
@@ -56,15 +87,16 @@ wide_stack <- wide_stack %>%
 
 
 ```
-_done loading..._ 
 
----
+*done loading...*
+
+------------------------------------------------------------------------
 
 ## The Programming Languages of Data Science
 
 ### Language use over time
 
-Python and SQL are the most prevalent languages in 2022. Notably, Julia appears to have exhibited consistent growth since 2017, which makes sense considering it is a relatively new language. The distribution plot is another glimpse of usage changes over time. 
+Python and SQL are the most prevalent languages in 2022. Notably, Julia appears to have exhibited consistent growth since 2017, which makes sense considering it is a relatively new language. The distribution plot is another glimpse of usage changes over time.
 
 ```{r side_by_side_over_time, warning = FALSE, message = FALSE}
 long_stack <- wide_stack %>%
@@ -128,7 +160,7 @@ long_stack %>%
 
 People of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
 
----
+------------------------------------------------------------------------
 
 ## Salaries
 
@@ -210,7 +242,7 @@ wide_stack %>%
 
 ### Salary vs age
 
-We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey. 
+We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey.
 
 ```{r, salary_versus_age, message = FALSE, warning = FALSE}
 wide_stack %>%
@@ -229,12 +261,11 @@ wide_stack %>%
     theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
 ### Conclusions: Salaries
 
 Monaco and Afghanistan were the countries with the two highest average annual salaries. Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Specifically in the U.S., blockchain developers also had the highest average annual salaries. Like the rest of the world, project managers and senior executives had the highest annual salaries out of all the job titles.
 
----
+------------------------------------------------------------------------
 
 ## Status, Degrees, and Org Size
 
@@ -282,8 +313,7 @@ wide_stack %>%
   scale_fill_brewer(palette = "Set3")
 ```
 
-
-###  Organization size to years coding 
+### Organization size to years coding
 
 ```{r ggplot_avg_org_size_by_code_prof,  message = FALSE, warning = FALSE}
 ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
@@ -293,8 +323,7 @@ ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
   labs(x = "Years coding", y = "Org Size")
 ```
 
-
----
+------------------------------------------------------------------------
 
 ## Gender and Programming Languages
 
@@ -371,7 +400,7 @@ From the table below, it's apparent that there are only four females in this spe
 
 ```
 
----
+------------------------------------------------------------------------
 
 ## Case Study: Scala and Python
 
@@ -472,7 +501,7 @@ ggplot(df_scala_python_edlevel, aes(x = Year, y = AvgSalary, color = `Level of E
 
 From the above graphs, we can infer that knowing a combination of the two languages will likely result in a higher salary and despite a drop in the salaries of python developers from 2019 to 2021 there is marked growth in salaries in all areas of expertise in the past 2 years in the United States. The growth of salaries is also seen across all levels of education roughly since 2021. Although the nature of this growth is not entirely clear because the survey was based on individuals self reporting their education.
 
----
+------------------------------------------------------------------------
 
 ## Links, Sources and URLS
 
@@ -480,4 +509,4 @@ From the above graphs, we can infer that knowing a combination of the two langua
 
 [Main Project Github](https://github.com/tonythor/krijudato/)
 
-[RPubs](rpubs hyperlink) 
+[RPubs](rpubs%20hyperlink)
