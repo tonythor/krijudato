@@ -49,6 +49,7 @@ In this project, we will use the Stack Overflow survey data to answer the above 
 
 ------------------------------------------------------------------------
 
+
 #### Project overview
 
 ![](./images/overview.svg)
@@ -83,9 +84,6 @@ language_cols <- c("python", "sql", "java", "scala", "r", "julia")
 wide_stack <- wide_stack %>%
   mutate(Gender = ifelse(Gender == "Woman", "Female", ifelse(Gender == "Man", "Male", Gender))) %>%
   mutate(Age = as.numeric(as.character(Age)))
-
-
-
 ```
 
 *done loading...*
@@ -143,6 +141,7 @@ long_stack %>%
   filter(str_detect(Employment, "full")) %>%
   filter(AnnualSalary < 500000) %>% # removal of outliers
   filter(!is.na(AnnualSalary)) %>%
+
   select(Year, Age, Gender, AnnualSalary, Language, Employment) %>%
   ggplot(aes(x = Language, y = AnnualSalary, fill = Language)) +
     geom_violin() +
@@ -156,9 +155,9 @@ long_stack %>%
     labs(x = "", y = "Annual Salary (USD)")
 ```
 
-### The programming languages of data science: Conclusions
+### Conclusions: Languages
 
-People of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
+Based on the preceding charts, our observations indicate that Python and SQL are the dominant languages in terms of popularity. Julia stands out for its remarkable and sustained growth since 2017, which aligns with outside research as it is a relatively new language. As for compensation, Scala emerges as the consistently top-paying language since 2017, as evidenced by the salary vs. language graph.
 
 ------------------------------------------------------------------------
 
@@ -223,7 +222,6 @@ wide_stack %>%
 ### By developer type, US Only, minus blockchain
 
 ```{r excludingBlockchain, message = FALSE, warning = FALSE}
-
 wide_stack %>%
   mutate(DevType = str_split_fixed(DevType, ';', 2)[, 1]) %>%
   filter(!is.na(AnnualSalary)) %>%
@@ -248,11 +246,12 @@ We can see from the below graph that those between ages 23 and 38 have a higher 
 wide_stack %>%
   filter(Year %in% 2018:2022) %>% # 2017 not in USD
   filter(str_detect(Employment, "full")) %>% # full timers only 
-  filter(!is.na(Age)) %>%
+  filter(!is.na(Age)) %>% 
   mutate(Age_Group = cut(Age,
       breaks = c(18, seq(23, 65, by = 5)),  # Create breaks from 18 to 65 in increments of 5
       labels = paste(seq(18, 60, by = 5), seq(23, 65, by = 5), sep = "-"),
       right = FALSE)) %>%
+  na.exclude(Age_Group) %>%
   select(Year, Age_Group, Gender, AnnualSalary) %>%
   ggplot(aes(x = Age_Group, y = AnnualSalary)) +
     geom_point() +
@@ -263,7 +262,7 @@ wide_stack %>%
 
 ### Conclusions: Salaries
 
-Monaco and Afghanistan were the countries with the two highest average annual salaries. Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Specifically in the U.S., blockchain developers also had the highest average annual salaries. Like the rest of the world, project managers and senior executives had the highest annual salaries out of all the job titles.
+Monaco and Afghanistan were the countries with the two highest average annual salaries. Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Specifically in the U.S., blockchain developers also had the highest average annual salaries. Like the rest of the world, project managers and senior executives had the highest annual salaries out of all the job titles. We also learned that full time workers between ages 23 and 38 have higher salary distributions than those who are older. However, this may not be an accurate conclusion, as it is possible that older generations of workers feel less inclined to complete the Stack Overflow survey.
 
 ------------------------------------------------------------------------
 
@@ -314,6 +313,9 @@ wide_stack %>%
 ```
 
 ### Organization size to years coding
+
+People of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
+
 
 ```{r ggplot_avg_org_size_by_code_prof,  message = FALSE, warning = FALSE}
 ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
