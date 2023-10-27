@@ -19,6 +19,37 @@ editor_options:
 
 ------------------------------------------------------------------------
 
+## Introduction
+
+Beginning in 2011, Stack Overflow has conducted an annual survey for developers to participate in. This survey provides insights on a wide variety of topics, such as employment status, annual salary, language knowledge, location, and much more.
+
+As aspiring data scientists, we aim to answer the following questions:
+
+-   What are the most popular programming languages?
+
+-   What are the highest paying programming languages?
+
+-   Do certain developer types make more money than others?
+
+-   Do different regions make more money than others?
+
+-   Does age have an impact on salary?
+
+-   Are people more likely to be employed full-time if they have a higher level degree?
+
+-   Is there a gender wage gap in the industry?
+
+-   Do larger companies hire more experienced people?
+
+-   Does knowing more than one language increase your salary?
+
+-   Does having a higher level degree impact your salary?
+
+In this project, we will use the Stack Overflow survey data to answer the above questions, and hopefully provide more insight to our fellow aspiring data scientists.
+
+------------------------------------------------------------------------
+
+
 #### Project overview
 
 ![](./images/overview.svg)
@@ -284,6 +315,7 @@ wide_stack %>%
 ### Organization size to years coding
 
 People of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
+
 
 ```{r ggplot_avg_org_size_by_code_prof,  message = FALSE, warning = FALSE}
 ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
