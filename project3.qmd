@@ -53,13 +53,7 @@ wide_stack <- wide_stack %>%
   mutate(Gender = ifelse(Gender == "Woman", "Female", ifelse(Gender == "Man", "Male", Gender))) %>%
   mutate(Age = as.numeric(as.character(Age)))
 
-long_stack <- wide_stack %>%
-  pivot_longer(cols = all_of(language_cols),
-               names_to = "Language",
-               values_to = "LanguageYesOrNo",
-               names_prefix = "language_") %>%
-  filter(LanguageYesOrNo == "yes") %>%
-  select(Year, Age, Gender, AnnualSalary, Language, Employment, LanguageYesOrNo)
+
 
 ```
 _done loading..._ 
@@ -73,21 +67,29 @@ _done loading..._
 Python and SQL are the most prevalent languages in 2022. Notably, Julia appears to have exhibited consistent growth since 2017, which makes sense considering it is a relatively new language. The distribution plot is another glimpse of usage changes over time. 
 
 ```{r side_by_side_over_time, warning = FALSE, message = FALSE}
+long_stack <- wide_stack %>%
+  pivot_longer(cols = all_of(language_cols),
+               names_to = "Language",
+               values_to = "LanguageYesOrNo",
+               names_prefix = "language_") %>%
+  filter(LanguageYesOrNo == "yes") %>%
+  select(Year, Age, Gender, AnnualSalary, Language, Employment, LanguageYesOrNo)
+
 language_growth <- long_stack %>%
   filter(LanguageYesOrNo == "yes") %>%
   group_by(Language, Year) %>%
   summarise(Count = n())
 
 p1 <- ggplot(language_growth, aes(x = Year, y= Count, color = Language)) +
-  geom_line(size = 2) +
-  ggtitle("Language Use Over Time") + 
+  geom_line(size = 1.5) +
+  ggtitle("Use Over Time") + 
   labs( x = "Year", y = "Count of Surveyors" ) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
 p2 <- ggplot(long_stack, aes(x = Language, fill = factor(Year))) +
   geom_bar(position = "dodge", width = 0.7) +
-  ggtitle("Language Distribution by Year") +
+  ggtitle("Distribution by Year") +
   labs( x = "", y = "Count of Surveyors", fill = "Year" ) +
   theme(plot.title = element_text(hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5)) +
@@ -97,7 +99,7 @@ grid.arrange(p1, p2, ncol = 2, widths = c(2, 1.5))
 
 ```
 
-### Languages pay over time
+### Languages and pay over time
 
 Let's now look at the distribution of salaries over the years. We will need to create a new data frame that has the following attributes:
 
@@ -127,8 +129,6 @@ long_stack %>%
     labs(x = "", y = "Annual Salary (USD)")
 ```
 
----
-
 ### The Programming Languages of Data Science: Conclusions
 
 People of all coding experience work for organizations of all different sizes. Most people have coded 0 to 20 years, but people of all coding experiences work for small organizations, medium-sized organizations, and large organizations. There does not seem to be any relationship. The decision to employ workers, and the decision to work at a particular-size company is likely determined on a individual basis. Most organizations likely try to employ people of all different experience levels. Some employees need a lot of experience, while others will gain that experience on the job.
@@ -137,7 +137,7 @@ People of all coding experience work for organizations of all different sizes. M
 
 ## Salaries
 
-### Salaries by Country
+### by Country
 
 ```{r sal_by_country}
 wide_stack %>%
@@ -156,109 +156,82 @@ wide_stack %>%
     ggtitle("Average Salaries by Country/Region")
 ```
 
-### Salaries by Developer Type
+### by Developer Type
 
 ```{r sal_by_developer_type}
-tempWideStack <- wide_stack
-tempWideStack[c('DevType', 'To.Delete')] <- str_split_fixed(tempWideStack$DevType, ';', 2)
-tempWideStack <- tempWideStack[,-45]
-
-AvgSalaries <- tempWideStack |> 
-  filter(!is.na(AnnualSalary)) |> 
-  group_by(DevType) |> 
-  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) |>
-  arrange(desc(AvgSalary)) |>
-  head(n = 20)
-
-ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top 20 Average Salaries by Developer Type")
+wide_stack %>%
+  mutate(DevType = str_split_fixed(DevType, ';', 2)[, 1]) %>%
+  filter(!is.na(AnnualSalary)) %>%
+  group_by(DevType) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  arrange(desc(AvgSalary)) %>%
+  head(n = 20) %>%
+  ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    ggtitle("Top 20 Average Salaries by Developer Type") +
+    labs(x = "Developer Type", y = "Average Salary")
 
 ```
 
-### Average Salaries in the U.S. by Developer Type
+### by Developer Type, US Only
 
-```{r sal_us_developer_type}
-
-tempWideStack |> 
-  filter(!is.na(AnnualSalary)) |> 
-  group_by(DevType) |>
-  filter((Country == "United States") | (Country == "United States of America")) |>
-  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) |>
-  arrange(desc(AvgSalary)) |>
-  head(n = 20) |>
-  ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +  # Note: I added reorder() here for ordering in the plot
-  geom_bar(stat = "identity", position = "dodge") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top 20 Average Salaries in the U.S. by Developer Type")
+```{r sal_us_developer_type, message = FALSE, warning = FALSE}
+wide_stack %>%
+  mutate(DevType = str_split_fixed(DevType, ';', 2)[, 1]) %>%
+  filter(!is.na(AnnualSalary)) %>%
+  group_by(DevType) %>%
+  filter((Country == "United States") | (Country == "United States of America")) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  arrange(desc(AvgSalary)) %>%
+  head(n = 20) %>%
+  ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    ggtitle("Top 20 Average Salaries in the U.S. by Developer Type") +
+    labs(x = "Developer Type", y = "Average Salary") 
   
 ```
 
-### Average Salaries in the U.S. by Developer Type (minus blockchain)
+### by Developer Type, US Only, minus blockchain
 
+```{r excludingBlockchain, message = FALSE, warning = FALSE}
 
-```{r excludingBlockchain}
-
-AvgSalaries <- AvgSalaries |> filter(DevType != "Blockchain")
-ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top 19 Average Salaries in the U.S. by Developer Type", subtitle = "Excluding Blockchain Developers")
-
-```
-
-```{r}
-# tempWideStack <- wide_stack
-# tempWideStack[c('DevType', 'To.Delete')] <- str_split_fixed(tempWideStack$DevType, ';', 2)
-# tempWideStack <- tempWideStack[,-45]
-
-# AvgSalaries <- tempWideStack |> 
-#   filter(!is.na(AnnualSalary)) |> 
-#   group_by(DevType) |> 
-#   summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) |>
-#   arrange(desc(AvgSalary)) |>
-#   head(n = 20)
-
-# AvgSalaries <- AvgSalaries |> filter(DevType != "Blockchain")
-# ggplot(AvgSalaries, aes(x = DevType, y = AvgSalary)) +
-#   geom_bar(stat = "identity", position = "dodge") +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#   ggtitle("Top 19 Average Salaries in the U.S. by Developer Type", subtitle = "Excluding Blockchain Developers")
-
-```
-
-### Salary Distribution vs Age
-
-Let's examine whether age has an influence on salary. We will need to filter for the following:
-
--   2018 to 2022, as 2017 salaries are not in USD
--   full time employees only
--   remove cases where age is NA
-
-We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey. It's possible that older professionals in the industry are less inclined to engage with Stack Overflow.
-
-```{r, message = FALSE, warning = FALSE}
 wide_stack %>%
-  # filter out 2017 since the salaries are not in USD
-  filter(Year %in% 2018:2022) %>%
-  # filter so only full time employees are included
-  filter(str_detect(Employment, "full")) %>%
-  # remove rows where age is NA
+  mutate(DevType = str_split_fixed(DevType, ';', 2)[, 1]) %>%
+  filter(!is.na(AnnualSalary)) %>%
+  group_by(DevType) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  arrange(desc(AvgSalary)) %>%
+  head(n = 20) %>%
+  filter(DevType != "Blockchain") %>%
+  ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    ggtitle("Top 19 Average Salaries in the U.S. by Developer Type", subtitle = "Excluding Blockchain Developers") +
+    labs(x = "Developer Type", y = "Average Salary")
+
+```
+
+### Salary vs Age
+
+We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey. 
+
+```{r, salary_versus_age, message = FALSE, warning = FALSE}
+wide_stack %>%
+  filter(Year %in% 2018:2022) %>% # 2017 not in USD
+  filter(str_detect(Employment, "full")) %>% # full timers only 
   filter(!is.na(Age)) %>%
-  # create age group categories
   mutate(Age_Group = cut(Age,
-                         breaks = c(18, seq(23, 65, by = 5)),  # Create breaks from 18 to 65 in increments of 5
-                         labels = paste(seq(18, 60, by = 5), seq(23, 65, by = 5), sep = "-"),
-                         right = FALSE)) %>%
-  # Select required columns
+      breaks = c(18, seq(23, 65, by = 5)),  # Create breaks from 18 to 65 in increments of 5
+      labels = paste(seq(18, 60, by = 5), seq(23, 65, by = 5), sep = "-"),
+      right = FALSE)) %>%
   select(Year, Age_Group, Gender, AnnualSalary) %>%
-  # Directly pipe into ggplot
   ggplot(aes(x = Age_Group, y = AnnualSalary)) +
-  geom_point() +
-  ggtitle("Age vs. Annual Salary") +
-  labs(x = "Age Group", y = "Annual Salary (USD)") +
-  theme(plot.title = element_text(hjust = 0.5))
+    geom_point() +
+    ggtitle("Age vs. Annual Salary") +
+    labs(x = "Age Group", y = "Annual Salary (USD)") +
+    theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -270,82 +243,73 @@ Monaco and Afghanistan were the countries with the two highest average annual sa
 
 ## Job status, Organization, and Degree Type 
 
-## Organization Size related Years Coding 
 
-```{r ggplot_avg_org_size_by_code_prof}
-ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
-  geom_point() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Average Organization Size by Average Number of Years Coding Professionally")
+### Job Status by Degree
 
-```
+People are most likely to be employed full-time if they have a Bachelor's degree, Master's degree, or completed some college. Also, people who have a Bachelor's degree are more likely to be self-employed than any other degree. People who only completed high school are most likely to be unemployed. Since most people who took the survey had Bachelor's degrees based on these counts, it may have skewed the results. Also, people are more likely to take this survey if they are employed because they may use Stack Overflow to help them while working at their job.
 
-
-### Count of People with a Specific Job Status by Degree
-
-It seems that the most number of people have a Bachelor's degree and are employed full-time. People are most likely to be employed full-time if they have a Bachelor's degree, Master's degree, or completed some college. Also, people who have a Bachelor's degree are more likely to be self-employed than any other degree. People who only completed high school are most likely to be unemployed. Since most people who took the survey had Bachelor's degrees based on these counts, it may have skewed the results. Also, people are more likely to take this survey if they are employed because they may use Stack Overflow to help them while working at their job.
-
-```{r}
-
+```{r by_degree, message = FALSE, warning = FALSE}
 degree_order <- c("High School", "Some college", "Associate's", "Bachelor's", "Professional", "Master's", "Doctorate")
 
-tempWideStack %>%
-  select(JobStatus = Employment, Degree = EdLevel) %>%
+wide_stack %>%
   mutate(
+    DevType = str_split_fixed(DevType, ';', 2)[, 1],
     JobStatus = case_when(
-      grepl("Employed, full-time", JobStatus) ~ "Employed, full-time",
-      grepl("Employed, part-time", JobStatus) ~ "Employed, part-time",
-      grepl("Not employed", JobStatus) ~ "Not employed",
-      grepl("self-employed", JobStatus) ~ "Self-employed",
-      grepl("I prefer not to say", JobStatus) ~ NA_character_,
-      grepl("Retired", JobStatus) ~ "Retired",
-      grepl("Student", JobStatus) ~ "Student",
-      TRUE ~ JobStatus
+      grepl("Employed, full-time", Employment) ~ "Employed, full-time",
+      grepl("Employed, part-time", Employment) ~ "Employed, part-time",
+      grepl("Not employed", Employment) ~ "Not employed",
+      grepl("self-employed", Employment) ~ "Self-employed",
+      grepl("I prefer not to say", Employment) ~ NA_character_,
+      grepl("Retired", Employment) ~ "Retired",
+      grepl("Student", Employment) ~ "Student",
+      TRUE ~ Employment
     ),
     Degree = case_when(
-      grepl("Associate", Degree) ~ "Associate's",
-      grepl("Bachelor", Degree) ~ "Bachelor's",
-      grepl("Master", Degree) ~ "Master's",
-      grepl("doctoral", Degree) ~ "Doctorate",
-      grepl("Some college", Degree) ~ "Some college",
-      grepl("Secondary", Degree) ~ "High School",
-      grepl("Professional", Degree) ~ "Professional",
-      grepl("prefer|never|Primary|Something", Degree) ~ NA_character_,
-      TRUE ~ Degree
+      grepl("Associate", EdLevel) ~ "Associate's",
+      grepl("Bachelor", EdLevel) ~ "Bachelor's",
+      grepl("Master", EdLevel) ~ "Master's",
+      grepl("doctoral", EdLevel) ~ "Doctorate",
+      grepl("Some college", EdLevel) ~ "Some college",
+      grepl("Secondary", EdLevel) ~ "High School",
+      grepl("Professional", EdLevel) ~ "Professional",
+      grepl("prefer|never|Primary|Something", EdLevel) ~ NA_character_,
+      TRUE ~ EdLevel
     )
   ) %>%
+  select(JobStatus, Degree) %>%
   filter(!is.na(Degree), !is.na(JobStatus)) %>%
   mutate(Degree = factor(Degree, levels = degree_order)) %>%
   ggplot(aes(Degree, ..count..)) + 
   geom_bar(aes(fill = JobStatus), position = "dodge") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Count of People with a Specific Job Status by Degree",
+  labs(title = "Employment Status by Degree ",
        x = "Degree",
        y = "Count of People") +
   scale_fill_brewer(palette = "Set3")
 ```
+
+
+###  Organization Size related Years Coding 
+
+```{r ggplot_avg_org_size_by_code_prof,  message = FALSE, warning = FALSE}
+ggplot(wide_stack, aes(x = YearsCodeProAvg, y = OrgSizeAvg)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Organization Size by years coding Professionally") +
+  labs(x = "Years coding", y = "Org Size")
+```
+
 ---
 
 ## Gender and Programming Languages
 
-Surveyors in Average Salary Calculation
-
-### Average Salary for Each Distinct Language
-
-We are interested in examining the average salaries for each distinct programming language, segmented by gender. In order for us to calculate these averages, we need to create a new data frame that has the following attributes:
-
--   excludes people who know more than one language
--   excludes people who know no languages
--   includes only those who work full time
--   excludes the year 2017, as the 2017 salary data is not in USD
+### Gender, Salary and Language
 
 The below plot illustrates the average salary per gender for each distinct language.
 
 ```{r calculation-dataframe, warning = FALSE, message = FALSE}
-# Determine people with 'yes' in more than one column and remove them
-onelanguage_df <- wide_stack %>%
+wide_stack %>%
   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
-  # create a new column with the one language each person knows
   mutate(KnownLanguage = case_when(
     python == "yes" ~ "python",
     sql == "yes" ~ "sql",
@@ -353,25 +317,16 @@ onelanguage_df <- wide_stack %>%
     scala == "yes" ~ "scala",
     r == "yes" ~ "r",
     julia == "yes" ~ "julia",
-    TRUE ~ "unknown"  # Handle cases where no language is known
+    TRUE ~ "unknown"
   )) %>%
-  # remove the cases where no language is known
   filter(KnownLanguage != "unknown") %>%
-  # we're not using 2017 since the salaries are not in USD
   filter(Year %in% 2018:2022) %>%
-  # filter so only full time employees are included
   filter(str_detect(Employment, "full")) %>%
-  select(Year, Gender, Employment, AnnualSalary, KnownLanguage)
-
-# filter for genders "female" and "male" and find the averages 
-# for each language and gender combination
-average_salaries <- onelanguage_df %>%
+  select(Year, Gender, Employment, AnnualSalary, KnownLanguage) %>%
   filter(Gender %in% c("Female", "Male")) %>%
   group_by(Gender, KnownLanguage) %>%
-  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE))
-
-# Create a bar plot
-ggplot(average_salaries, aes(x = KnownLanguage, y = AvgSalary, fill = Gender)) +
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  ggplot(aes(x = KnownLanguage, y = AvgSalary, fill = Gender)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
   ggtitle("Average Salary for Each Distinct Language") +
   labs(x = "Language", y = "Average Salary") +
@@ -386,33 +341,136 @@ From the previous graph, we see that the average female salary for Scala is an o
 
 From the table below, it's apparent that there are only four females in this specific dataset who are proficient in Julia. When considering the actual population of females who exclusively know Julia, this dataset may not provide an accurate representation of their salaries. A similar inference could be made for Scala, as there are only 27 females who exclusively know Scala in contrast to 506 men. However, it's important to note that this dataset accurately reflects the salaries of females who participated in the Stack Overflow survey. In other words, these average salaries are representative of the sample of females who completed the survey, but not the true population of females who know Scala and Julia.
 
-```{r}
-# create a table of the counts
-counts_avg_salaries <- onelanguage_df %>%
+```{r count_of_surveyors_new}
+ wide_stack %>%
+  filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
+  mutate(KnownLanguage = case_when(
+    python == "yes" ~ "python",
+    sql == "yes" ~ "sql",
+    java == "yes" ~ "java",
+    scala == "yes" ~ "scala",
+    r == "yes" ~ "r",
+    julia == "yes" ~ "julia",
+    TRUE ~ "unknown"
+  )) %>%
+  filter(KnownLanguage != "unknown") %>%
+  filter(Year %in% 2018:2022) %>%
+  filter(str_detect(Employment, "full")) %>%
   filter(Gender %in% c("Female", "Male")) %>%
   filter(!is.na(AnnualSalary)) %>%
   group_by(Gender, KnownLanguage) %>%
   mutate(Count = n()) %>%
   select(KnownLanguage, Gender, Count) %>%
-  distinct() %>% 
+  distinct() %>%
   arrange(KnownLanguage) %>%
-  as.data.frame()
-
-# create gt table
-counts_avg_salaries_tbl <- gt(counts_avg_salaries) 
-  
-counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
+  ungroup() %>%
+  gt() %>%
   tab_header(
     title = md("**Count of Surveyors in Average Salary Calculation**")
-  ) |>
+  ) %>%
   cols_label(
     KnownLanguage = md("**Language**"),
     Gender = md("**Gender**"),
     Count = md("**Count**")
   )
 
-# show table
-counts_avg_salaries_tbl
+# # show table
+# counts_avg_salaries_tbl
+
+```
+
+
+```{r count_of_surveyors, echo=FALSE}
+
+# counts_avg_salaries <- wide_stack %>%
+#   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
+#   mutate(KnownLanguage = case_when(
+#     python == "yes" ~ "python",
+#     sql == "yes" ~ "sql",
+#     java == "yes" ~ "java",
+#     scala == "yes" ~ "scala",
+#     r == "yes" ~ "r",
+#     julia == "yes" ~ "julia",
+#     TRUE ~ "unknown"
+#   )) %>%
+#   filter(KnownLanguage != "unknown") %>%
+#   filter(Year %in% 2018:2022) %>%
+#   filter(str_detect(Employment, "full")) %>%
+#   filter(Gender %in% c("Female", "Male")) %>%
+#   filter(!is.na(AnnualSalary)) %>%
+#   group_by(Gender, KnownLanguage) %>%
+#   mutate(Count = n()) %>%
+#   select(KnownLanguage, Gender, Count) %>%
+#   distinct() %>%
+#   arrange(KnownLanguage) %>%
+#   ungroup() %>%
+#   as.data.frame()
+
+# # create gt table
+# counts_avg_salaries_tbl <- gt(counts_avg_salaries) 
+# counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
+#   tab_header(
+#     title = md("**Count of Surveyors in Average Salary Calculation**")
+#   ) |>
+#   cols_label(
+#     KnownLanguage = md("**Language**"),
+#     Gender = md("**Gender**"),
+#     Count = md("**Count**")
+#   )
+
+# # show table
+# counts_avg_salaries_tbl
+
+```
+
+```{r echo=FALSE}
+
+# onelanguage_df <- wide_stack %>%
+#   filter(rowSums(.[, language_cols] == "yes") <= 1) %>%
+#   # create a new column with the one language each person knows
+#   mutate(KnownLanguage = case_when(
+#     python == "yes" ~ "python",
+#     sql == "yes" ~ "sql",
+#     java == "yes" ~ "java",
+#     scala == "yes" ~ "scala",
+#     r == "yes" ~ "r",
+#     julia == "yes" ~ "julia",
+#     TRUE ~ "unknown"  # Handle cases where no language is known
+#   )) %>%
+#   # remove the cases where no language is known
+#   filter(KnownLanguage != "unknown") %>%
+#   # we're not using 2017 since the salaries are not in USD
+#   filter(Year %in% 2018:2022) %>%
+#   # filter so only full time employees are included
+#   filter(str_detect(Employment, "full")) %>%
+#   select(Year, Gender, Employment, AnnualSalary, KnownLanguage)
+
+# # create a table of the counts
+# counts_avg_salaries <- onelanguage_df %>%
+#   filter(Gender %in% c("Female", "Male")) %>%
+#   filter(!is.na(AnnualSalary)) %>%
+#   group_by(Gender, KnownLanguage) %>%
+#   mutate(Count = n()) %>%
+#   select(KnownLanguage, Gender, Count) %>%
+#   distinct() %>% 
+#   arrange(KnownLanguage) %>%
+#   as.data.frame()
+
+# # create gt table
+# counts_avg_salaries_tbl <- gt(counts_avg_salaries) 
+  
+# counts_avg_salaries_tbl <- counts_avg_salaries_tbl |>
+#   tab_header(
+#     title = md("**Count of Surveyors in Average Salary Calculation**")
+#   ) |>
+#   cols_label(
+#     KnownLanguage = md("**Language**"),
+#     Gender = md("**Gender**"),
+#     Count = md("**Count**")
+#   )
+
+# # show table
+# counts_avg_salaries_tbl
 ```
 
 ---
