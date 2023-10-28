@@ -165,6 +165,8 @@ Based on the preceding charts, our observations indicate that Python and SQL are
 
 ### By Country
 
+Monaco and Afghanistan were the countries with the two highest average annual salaries.  Specifically in the U.S., blockchain developers also had the highest average annual salaries. 
+
 ```{r sal_by_country}
 wide_stack %>%
   filter(!is.na(AnnualSalary)) %>%
@@ -184,6 +186,8 @@ wide_stack %>%
 
 ### By Developer Type
 
+Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries.
+
 ```{r sal_by_developer_type}
 wide_stack %>%
   mutate(DevType = str_split_fixed(DevType, ';', 2)[, 1]) %>%
@@ -200,7 +204,9 @@ wide_stack %>%
 
 ```
 
-### By developer type, US Only
+### By developer type, United States Only
+
+Like the rest of the world, blockchain developers, project managers, and senior executives had the highest annual salaries out of all the job titles in the U.S.
 
 ```{r sal_us_developer_type, message = FALSE, warning = FALSE}
 wide_stack %>%
@@ -219,7 +225,9 @@ wide_stack %>%
   
 ```
 
-### By developer type, US Only, minus blockchain
+### By developer type, United States Only, minus blockchain
+
+Since the average salary for blockchain developers was much higher than other salaries, it was removed from the following chart. The differences between the rest of the developer salaries in the U.S. can more clearly be seen here.
 
 ```{r excludingBlockchain, message = FALSE, warning = FALSE}
 wide_stack %>%
@@ -240,7 +248,7 @@ wide_stack %>%
 
 ### Salary vs age
 
-We can see from the below graph that those between ages 23 and 38 have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey.
+We can see from the below graph that those between ages 23 and 38 with full time jobs have a higher salary distribution than those 18 to 23 and 38 and older. This phenomenon might be attributed to the composition of the respondents in the Stack Overflow survey. It is possible that older generations of workers feel less inclined to complete the Stack Overflow survey.
 
 ```{r, salary_versus_age, message = FALSE, warning = FALSE}
 wide_stack %>%
@@ -259,10 +267,6 @@ wide_stack %>%
     labs(x = "Age Group", y = "Annual Salary (USD)") +
     theme(plot.title = element_text(hjust = 0.5))
 ```
-
-### Conclusions: Salaries
-
-Monaco and Afghanistan were the countries with the two highest average annual salaries. Blockchain developers appeared the have the highest salary, but this might be a typo or outlier. Besides blockchain developers, project managers and senior executives had the highest average annual salaries. Specifically in the U.S., blockchain developers also had the highest average annual salaries. Like the rest of the world, project managers and senior executives had the highest annual salaries out of all the job titles. We also learned that full time workers between ages 23 and 38 have higher salary distributions than those who are older. However, this may not be an accurate conclusion, as it is possible that older generations of workers feel less inclined to complete the Stack Overflow survey.
 
 ------------------------------------------------------------------------
 
