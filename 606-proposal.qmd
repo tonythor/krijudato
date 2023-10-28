@@ -1,0 +1,105 @@
+---
+title: "DATA 606 Project Proposal"
+author: "Kristin Lussi and Tony Fraser"
+output:
+  pdf_document:
+    latex_engine: xelatex # or pdflatex or lualatex
+    keep_tex: true
+    header-includes:
+    - "\\usepackage{xcolor}"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r knitropts, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Data Preparation
+
+```{r setup, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+# load data
+source("functions.r")
+library(dplyr)
+library(psych)
+options(scipen=999)
+wide_stack <- get_stack_df(persist = TRUE, load_from_cache = TRUE)
+
+wide_stack <- wide_stack %>%
+  mutate(Gender = ifelse(Gender == "Woman", "Female", ifelse(Gender == "Man", "Male", Gender))) %>%
+  filter(Year %in% 2018:2022) %>%
+  filter(!is.na(AnnualSalary)) 
+```
+
+### Research question 
+
+What is the extent of the gender pay gap in the technology industry, and how does it vary across different ages, organization sizes, and regions?
+
+### Cases 
+
+In the cleaned data set we generated, there are 460,298 cases, 223,196 of which where annual salary is not null.  Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. The remaining columns on the right that specify whether a person has worked with a language or platform were extrapolated from those original columns. 
+
+### Data collection 
+
+The data collection method for the Stack Overflow annual survey primarily involves conducting an annual online survey. Participants are invited to complete a web-based questionnaire, which is distributed to users of the Stack Overflow platform. This survey covers various aspects of software development, including job roles, programming languages, tools, technologies, and salary information. Participants voluntarily share their insights and experiences by responding to the questionnaire.
+
+### Type of study 
+
+The Stack Overflow study is an annual observational study. 
+
+### Data Source 
+
+Survey data is collected by Stack Overflow and is available online [here](https://insights.stackoverflow.com/survey) We standardized years and unioned data together using [this group of functions](https://github.com/tonythor/krijudato/blob/develop/functions.r).
+
+
+### Dependent Variable
+
+The dependent/response variable is annual salary (quantitative).
+
+### Independent Variable
+
+The independent variables we will be analyzing are: 
+
+- Year (qualitative)
+- Gender (qualitative)
+- Organization Size (quantitative)
+- Country (qualitative)
+- Age (quantitative)
+
+
+### Relevant summary statistics 
+
+
+``` {r barplot-male-female}
+
+wide_stack %>%
+  filter(!is.na(AnnualSalary), 
+         Gender %in% c("Male", "Female")) %>%
+  group_by(Year, Gender) %>%
+  summarize(mean_salary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  ggplot(aes(x = as.factor(Year), y = mean_salary, fill = Gender)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Year", y = "Average Salary", title = "Average Salary by Year and Gender") +
+  scale_fill_manual(values = c("Male" = "blue", "Female" = "pink")) +
+  theme_minimal()
+```  
+
+```{r split-genders}
+# Split the data into two subsets by gender
+males <- subset(wide_stack, Gender == "Male")
+females <- subset(wide_stack, Gender == "Female")
+```
+
+```{r male-salary, warning = FALSE, message = FALSE}
+describe(males$AnnualSalary)
+```
+
+```{r female-salary, warning = FALSE, message = FALSE}
+describe(females$AnnualSalary)
+```
+
+```{r males-org size, warning = FALSE, message = FALSE}
+describe(males$OrgSizeAvg)
+```
+
+
