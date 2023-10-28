@@ -1,6 +1,6 @@
 ---
 title: "Finding Value Within the Data Science Industry"
-author: "Team Krijudato"
+author: "Team Krijudato (Kristin L, Julia F, David G, Tony F)"
 date: "October 29, 2023"
 output:
   pdf_document: default
@@ -513,6 +513,5 @@ From the above graphs, we can infer that knowing a combination of the two langua
 
 [The Stack Overflow Survey](https://insights.stackoverflow.com/survey)
 
-[Main Project Github](https://github.com/tonythor/krijudato/)
+[Project Github](https://github.com/tonythor/krijudato/)
 
-[RPubs](rpubs%20hyperlink)
