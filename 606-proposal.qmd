@@ -1,12 +1,12 @@
 ---
 title: "DATA 606 Project Proposal"
 author: "Kristin Lussi and Tony Fraser"
-output:
-  pdf_document:
-    latex_engine: xelatex # or pdflatex or lualatex
+format: 
+  pdf:
+    latex_engine: xelatex
     keep_tex: true
     header-includes:
-    - "\\usepackage{xcolor}"
+      - "\\usepackage{xcolor}"
 editor_options: 
   chunk_output_type: console
 ---
