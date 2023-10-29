@@ -1,64 +1,69 @@
 ---
-title: "DATA 606 Project Proposal"
+title: "The Gender Pay Gap in the Tech Sector \\\ [606 Project Proposal] "
 author: "Kristin Lussi and Tony Fraser"
-output:
-  pdf_document:
-    latex_engine: xelatex # or pdflatex or lualatex
+format: 
+  pdf:
+    latex_engine: xelatex
     keep_tex: true
     header-includes:
-    - "\\usepackage{xcolor}"
+      - "\\usepackage{xcolor}"
 editor_options: 
   chunk_output_type: console
 ---
 
-```{r knitropts, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
-### Data Preparation
+## Research question 
 
-```{r setup, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
-# load data
+What is the extent of the gender pay gap in the technology industry, and how does it vary across different ages, organization sizes, and regions?
+
+
+## Data Preparation
+
+ We prepared this data ourselves using a set of functions we wrote in 607. Data is ready to be used by simply loading the wide stack dataframe.
+
+
+```{r setup, warning=FALSE, message=FALSE, output=FALSE}
 source("functions.r")
 library(dplyr)
 library(psych)
+library(gt)
+
 options(scipen=999)
 wide_stack <- get_stack_df(persist = TRUE, load_from_cache = TRUE)
 
 wide_stack <- wide_stack %>%
-  mutate(Gender = ifelse(Gender == "Woman", "Female", ifelse(Gender == "Man", "Male", Gender))) %>%
+  mutate(
+      Gender = ifelse(Gender == "Woman", "Female", 
+      ifelse(Gender == "Man", "Male", Gender))
+  ) %>%
   filter(Year %in% 2018:2022) %>%
   filter(!is.na(AnnualSalary)) 
 ```
 
-### Research question 
 
-What is the extent of the gender pay gap in the technology industry, and how does it vary across different ages, organization sizes, and regions?
+## Cases 
 
-### Cases 
+Our data contains 460,298 cases, 223,196 of which where annual salary is not null.  Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. The are many other columns to the right describing if a respondent knows a certain technology. Those are all extrapolated from the original columns. 
 
-In the cleaned data set we generated, there are 460,298 cases, 223,196 of which where annual salary is not null.  Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. The remaining columns on the right that specify whether a person has worked with a language or platform were extrapolated from those original columns. 
-
-### Data collection 
+## Data collection 
 
 The data collection method for the Stack Overflow annual survey primarily involves conducting an annual online survey. Participants are invited to complete a web-based questionnaire, which is distributed to users of the Stack Overflow platform. This survey covers various aspects of software development, including job roles, programming languages, tools, technologies, and salary information. Participants voluntarily share their insights and experiences by responding to the questionnaire.
 
-### Type of study 
+## Type of study 
 
 The Stack Overflow study is an annual observational study. 
 
-### Data Source 
+## Data Source 
 
-Survey data is collected by Stack Overflow and is available online [here](https://insights.stackoverflow.com/survey) We standardized years and unioned data together using [this group of functions](https://github.com/tonythor/krijudato/blob/develop/functions.r).
+Survey data is collected by Stack Overflow and is available online [here](https://insights.stackoverflow.com/survey). We standardized and built that into a working data set with [this group of functions](https://github.com/tonythor/krijudato/blob/develop/functions.r).
 
+## Variables
 
-### Dependent Variable
+### Dependent
 
 The dependent/response variable is annual salary (quantitative).
 
-### Independent Variable
-
-The independent variables we will be analyzing are: 
+### Independent
 
 - Year (qualitative)
 - Gender (qualitative)
@@ -66,40 +71,160 @@ The independent variables we will be analyzing are:
 - Country (qualitative)
 - Age (quantitative)
 
+We are likely to pull in other independent variables into the study as time goes on. 
 
-### Relevant summary statistics 
+\newpage
+## Overview Charts
 
+### Salary by gender and year
 
-``` {r barplot-male-female}
-
+Here is the basic idea we are looking into. In all these years, on average men are paid more and it's not right.
+ 
+``` {r barplot-male-female, warning=FALSE, message=FALSE}
 wide_stack %>%
-  filter(!is.na(AnnualSalary), 
-         Gender %in% c("Male", "Female")) %>%
+  filter(Gender %in% c("Male", "Female")) %>%
   group_by(Year, Gender) %>%
   summarize(mean_salary = mean(AnnualSalary, na.rm = TRUE)) %>%
   ggplot(aes(x = as.factor(Year), y = mean_salary, fill = Gender)) +
   geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Year", y = "Average Salary", title = "Average Salary by Year and Gender") +
+  labs(x = "Year", y = "Average Salary", title = "Avg Salary by Year and Gender") +
   scale_fill_manual(values = c("Male" = "blue", "Female" = "pink")) +
   theme_minimal()
 ```  
 
-```{r split-genders}
-# Split the data into two subsets by gender
-males <- subset(wide_stack, Gender == "Male")
-females <- subset(wide_stack, Gender == "Female")
+\newpage
+### Respondents by age
+
+This data is spiked because it started as strings that said "Between 25 and 35, between 36,45, etc.
+
+```{r warning=FALSE, message=FALSE}
+wide_stack %>%
+  filter(Gender %in% c("Male", "Female")) %>%
+  group_by(AgeAvg, Gender) %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x = AgeAvg, y = count, color = Gender)) +
+  geom_line(size=1.5) +
+  labs(title = "By age",
+       x = "Age",
+       y = "Count",
+       color = "Gender") +
+  scale_x_continuous(limits = c(10, 80)) +
+  theme_minimal()
+```
+\newpage
+
+###  Respondents by years coding professionally
+
+```{r warning=FALSE, message=FALSE}
+wide_stack %>%
+  filter(Gender %in% c("Male", "Female")) %>%
+  group_by(YearsCodeProAvg, Gender) %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x = YearsCodeProAvg, y = count, color = Gender)) +
+  geom_line(size=1.5) +
+  labs(title = "By years coding professionally",
+       x = "Years coding professionally",
+       y = "Count",
+       color = "Gender") +
+  theme_minimal()
+
+```
+\newpage
+### Respondents by org size
+This is also spiked. It started in buckets like "between 0 and 200 people."
+```{r warning=FALSE, message=FALSE}
+wide_stack %>%
+  filter(Gender %in% c("Male", "Female")) %>%
+  group_by(OrgSizeAvg, Gender) %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x = OrgSizeAvg, y = count, color = Gender)) +
+  geom_line(size=1.5) +
+  labs(title = "By org size",
+       x = "Years coding professionally",
+       y = "Count",
+       color = "Gender") +
+  theme_minimal()
+
+```
+\newpage
+## Summary Statistics 
+
+### Numeric fields summary 
+
+```{r displayBoundVariants, warning=FALSE, message=FALSE}
+compute_zscore <- function(df) {
+  variables <- c("YearsCodeProAvg", "AnnualSalary", "OrgSizeAvg", "AgeAvg")
+  for (var in variables) {
+    mean_val <- mean(df[[var]], na.rm = TRUE)
+    sd_val <- sd(df[[var]], na.rm = TRUE)
+    z_var <- paste0("Z_", var)
+    df[[z_var]] <- (df[[var]] - mean_val) / sd_val
+  }
+  return(df)
+}
+
+male <- subset(wide_stack, Gender == "Male") %>% 
+  filter(AnnualSalary <= 500000) %>% 
+  compute_zscore()
+female <- subset(wide_stack, Gender == "Female") %>%
+   filter(AnnualSalary <= 500000) %>% 
+   compute_zscore()
+
+# Describe function
+describe_all <- function(named_list_of_vectors, request_cols) {
+  descriptions <- lapply(names(named_list_of_vectors), function(name) {
+    res <- describe(named_list_of_vectors[[name]])
+    res$set_name <- name
+    return(res)
+  })
+  result <- do.call(rbind, descriptions) %>%
+    mutate(zscore = (mean - mean(mean, na.rm = TRUE)) / mean(sd, na.rm = TRUE))
+    
+  result <- result[, request_cols]
+
+  result <- result %>%
+    mutate_at(vars(-set_name), round, 4)  
+
+  return(result)
+}
+
+v <- list(
+  F_Salary = female$AnnualSalary,
+  M_Salary = male$AnnualSalary,
+  F_YearsCodeAvg = female$YearsCodeProAvg,
+  M_YearsCodeAvg = male$YearsCodeProAvg,
+  F_OrgSizeAvg = female$OrgSizeAvg,
+  M_OrgSizeAvg = male$OrgSizeAvg,
+  F_AgeAvg = female$AgeAvg,
+  M_AgeAvg = male$AgeAvg
+)
+
+# avail request_cols = c("set_name", "vars", "n","mean","sd","median",
+# "trimmed","mad","min","max","range","skew","kurtosis" "se", "zscore")
+request_cols = c("set_name", "mean", "sd","se", "zscore", "skew", "kurtosis")
+
+describe_all(v, request_cols) %>%
+  gt() %>%
+  tab_options(table.font.size = "small")
 ```
 
-```{r male-salary, warning = FALSE, message = FALSE}
-describe(males$AnnualSalary)
+### Numeric fields correlated to annual salary
+
+```{r warning=FALSE, message=FALSE}
+
+numeric_data <- select(wide_stack, Year, AnnualSalary, 
+  YearsCodeProAvg, OrgSizeAvg, AgeAvg)
+cor_matrix <- cor(numeric_data, use = "complete.obs")
+cor_with_salary <- cor_matrix["AnnualSalary",]
+cor_with_salary <- cor_with_salary[-which(names(cor_with_salary) == "AnnualSalary")]
+cor_df <- data.frame(Variable = names(cor_with_salary), Correlation = cor_with_salary)
+
+ggplot(cor_df, aes(x = Variable, y = Correlation)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Correlations to annual salary", 
+       x = "", 
+       y = "Correlation coefficient") +
+  theme_minimal() +
+  ylim(-1, 1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red")
 ```
-
-```{r female-salary, warning = FALSE, message = FALSE}
-describe(females$AnnualSalary)
-```
-
-```{r males-org size, warning = FALSE, message = FALSE}
-describe(males$OrgSizeAvg)
-```
-
-
