@@ -449,8 +449,10 @@ wide_stack %>%
   mutate(status = case_when(
     python == "yes" & scala == "yes" ~ "both",
     python == "yes" & scala == "no" ~ "python",
-    python == "no" & scala == "yes" ~ "scala"
+    python == "no" & scala == "yes" ~ "scala",
+    python == "no" & scala == "no" ~ "neither"
   )) %>%
+  filter(status != "neither") %>%
   select(Year, AnnualSalary, status) %>%
   group_by(Year, status) %>%
   summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE), .groups = "drop") %>%
