@@ -2,7 +2,7 @@
 title: A Comprehensive Analysis of Gender Pay Gap in the Tech Industry Using Stack
   Overflow Survey Data
 author: "Kristin Lussi and Tony Fraser"
-date: "2023-12-07"
+date: "December 7th, 2023"
 output:
   slidy_presentation: default
   ioslides_presentation: default
