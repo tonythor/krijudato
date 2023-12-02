@@ -4,8 +4,8 @@ title: A Comprehensive Analysis of Gender Pay Gap in the Tech Industry Using Sta
 author: "Kristin Lussi and Tony Fraser"
 date: "2023-12-07"
 output:
-  pdf_document: default
   slidy_presentation: default
+  ioslides_presentation: default
 ---
 
 ```{r setup, include=FALSE}
@@ -22,21 +22,23 @@ Findings/conclusion
 
 significance of our findings
 
+By using a data set that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole.
+
 ## Introduction
 
-The gender pay gap within the technology industry has long been a subject of concern, reflecting broader societal issues and potential barriers to gender equity. This research paper uses data from the Stack Overflow Developer Survey, spanning multiple years, to conduct an examination of the gender pay gap across various variables. The main question we want to answer is: Is there a significant difference in salary between males and females within the tech industry?
+The gender pay gap within the technology industry in the United States has long been a subject of concern, reflecting broader societal issues and potential barriers to gender equity. This research paper uses data from the Stack Overflow Developer Survey, spanning multiple years, to conduct an examination of the gender pay gap across various variables. 
 
-Our study considers factors such as year, gender, organization size, country, age, etc. By using a dataset that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole.
+Our data contains 51,583 cases and each case represents an individual. Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. We will only be assessing individuals who identify as solely "female" or "male". We have also removed any individuals from the data that did not provide their salary.
 
-In this analysis, the null hypothesis ($H_0$) is: There is no significant difference in the mean annual salaries between male and females.
+The main question we want to answer is: **Is there a significant difference in salary between males and females within the tech industry?**
 
-The alternative hypothesis ($H_1$) is: There is a significant difference in the mean annual salaries between males and females. 
+The dependent variable is *Annual Salary*. We will utilize multiple linear regression to first determine if we can reject the null hypothesis. The null hypothesis ($H_0$) is: **There is no significant difference in the mean annual salaries between male and females.** The alternative hypothesis ($H_1$) is: **There is a significant difference in the mean annual salaries between males and females.** Once we determine if we can reject the null hypothesis, we will determine which variables are statistically significant in predicting the response variable (Annual Salary).
 
 ## Data Overview
 
 Tony explain how data was obtained.
 
-```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE}
+```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, output = FALSE}
 source("functions.r")
 library(dplyr)
 library(psych)
@@ -81,7 +83,7 @@ wide_stack <- wide_stack %>%
   filter(!is.na(AnnualSalary)) %>% 
   filter(Country == "United States") %>%
   select(-c(OrgSize, YearsCodePro, DevType, Age, PlatformWorkedWith, LanguageWorkedWith, DatabaseWorkedWith)) %>%
-  na.omit() %>%
+  #na.omit() %>%
   mutate(
     Gender = as.factor(Gender),
     Employment = as.factor(Employment),
@@ -89,13 +91,15 @@ wide_stack <- wide_stack %>%
     Country = as.factor(Country)) %>%
   mutate_at(
     vars(python:aws),   # Specify the range of columns you want to convert
-    as.factor  )
+    as.factor)
 
 # 1921 missing values in EdLevel
 # 292 missing values in Employment
 # 7548 missing values in OrgSize
 # 832 missing values in YearsCodePro
 ```
+
+--- 
 
 The following table shows the list of variables we will be considering in this analysis.
 
@@ -116,20 +120,20 @@ variable_names_table <- variable_names_df %>%
 variable_names_table
 ```
 
-```{r}
-glimpse(wide_stack)
-```
+---
 
 Converting female and male salary distributions to z-scores to compare.
 
 ```{r, warning = FALSE, message = FALSE, echo = FALSE}
 # calculate z-score
-wide_stack %>%
+wide_stack <- wide_stack %>%
   group_by(Gender) %>%
   mutate(
     z_score = (AnnualSalary - mean(AnnualSalary)) / sd(AnnualSalary)
   ) %>%
-  ungroup() %>%
+  ungroup() 
+
+wide_stack %>%
   ggplot(aes(x = z_score, y = as.factor(Gender), fill = Gender)) +
     geom_boxplot() +
     scale_x_continuous(limits = c(0, 20)) +
@@ -146,21 +150,11 @@ wide_stack %>%
       legend.position = "none"
     ) +
     coord_flip()
-
-    # geom_histogram(binwidth = .25, alpha = 0.75) +
-    # scale_x_continuous(limits = c(0, 5)) +
-    # labs(
-    #   title = "Distribution of Salaries by Gender") +
-    # ylab("Frequency") +
-    # xlab("Z-Score") +
-    # theme(axis.text.x = element_text(angle = 45, hjust = 1),
-    #       plot.title = element_text(face = "bold", hjust = 0.5),
-    #       plot.subtitle = element_text(face = "italic", hjust = 0.5)) %>%
 ```
 
+
+
 ## Data Analysis
-
-
 
 We will create a multiple linear regression model.
 
@@ -169,7 +163,11 @@ m_salary <- lm(AnnualSalary ~ Gender, data = wide_stack)
 summary(m_salary)
 ```
 
-From the above, we see that the p-value is 0.000000362%. Using a 95% confidence interval, this means that we can reject the null hypothesis. We can see that the adjusted $\R^2$ value is very small, which means that the model does not explain much of the variability of the dependent variable. So, we will first add in all of the variables in our study to determine which are good predictors of the variance. 
+From the above, we see that the p-value is ____%. Using a 95% confidence interval, having a p-value of less than 5% means that we can reject the null hypothesis. We can see that the adjusted $\R^2$ value is very small, which means that the model does not explain much of the variability of the dependent variable. 
+
+---
+
+So, we will first add in all of the variables in our study to determine which are good predictors of the variance. 
 
 ```{r}
 wide_stack$Gender <- relevel(wide_stack$Gender, ref = "Female")
@@ -177,22 +175,23 @@ wide_stack$Gender <- relevel(wide_stack$Gender, ref = "Female")
 m_salary <- lm(AnnualSalary ~ Gender + AgeAvg +  EdLevel + OrgSizeAvg + Employment + YearsCodeProAvg + Year + python + r + scala + julia + microsoftazure + aws + linux + windows + mysql + oracle + ibmdb2 + mongodb, data = wide_stack)
 summary(m_salary)
 ```
+---
 
-From the above summary, we can assume that the following variables do not have a significant impact on annual salary: 
+From the previous summary, we can assume that the following variables do not have a significant impact on annual salary: 
 
-- Average Age: the p-value is 98.1%
-- Education level is not a significant predictor
-- Employment types "retired" & "self-employed" are not significant
-- YearsCodeProAvg is not significant
-- Python, R, Julia, Windows, MySQL, Oracle, IBM DB2, and Mongo DB are not significant
+- Average Age
+- Education level
+- Employment types "retired" & "self-employed"
+- YearsCodeProAvg
+- Python, R, Julia, Windows, MySQL, Oracle, IBM DB2, and Mongo DB 
 
 When the p-value is higher than the 5% significance level, this means that this variable is not statistically significant in predicting the response variable. So, we will remove the above variables and take another look.
 
 ```{r}
-# wide_stack_filtered <- wide_stack %>%
-#   filter(Employment != "Retired",
-#          Employment != "Self-Employed",
-#          )
+wide_stack_filtered <- wide_stack %>%
+  filter(Employment != "Retired",
+         Employment != "Self-Employed",
+         )
 
 wide_stack_filtered$Gender <- relevel(wide_stack_filtered$Gender, ref = "Female")
 
@@ -200,7 +199,7 @@ m_salary_update <- lm(AnnualSalary ~ Gender + OrgSizeAvg + Employment + Year + s
 summary(m_salary_update)
 ```
 
-
+---
 
 The four conditions of multiple linear regression are:
 
@@ -220,7 +219,6 @@ ggplot(data = m_salary_update, aes(x = .fitted, y = .resid)) +
 ```
 
 Next, we will look at normality.
-
 
 ```{r, warning = FALSE, message = FALSE}
 ggplot(data = m_salary_update, aes(sample = .resid)) + 
