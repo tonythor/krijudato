@@ -1,0 +1,231 @@
+---
+title: A Comprehensive Analysis of Gender Pay Gap in the Tech Industry Using Stack
+  Overflow Survey Data
+author: "Kristin Lussi and Tony Fraser"
+date: "2023-12-07"
+output:
+  pdf_document: default
+  slidy_presentation: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Abstract
+
+Summarize analysis
+
+Research methods
+
+Findings/conclusion
+
+significance of our findings
+
+## Introduction
+
+The gender pay gap within the technology industry has long been a subject of concern, reflecting broader societal issues and potential barriers to gender equity. This research paper uses data from the Stack Overflow Developer Survey, spanning multiple years, to conduct an examination of the gender pay gap across various variables. The main question we want to answer is: Is there a significant difference in salary between males and females within the tech industry?
+
+Our study considers factors such as year, gender, organization size, country, age, etc. By using a dataset that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole.
+
+In this analysis, the null hypothesis ($H_0$) is: There is no significant difference in the mean annual salaries between male and females.
+
+The alternative hypothesis ($H_1$) is: There is a significant difference in the mean annual salaries between males and females. 
+
+## Data Overview
+
+Tony explain how data was obtained.
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE}
+source("functions.r")
+library(dplyr)
+library(psych)
+library(gt)
+library(stringr)
+
+set.seed(4299)
+
+options(scipen=999)
+wide_stack <- get_stack_df(persist = TRUE, load_from_cache = TRUE)
+
+wide_stack <- wide_stack %>%
+  mutate(
+    Gender = ifelse(Gender == "Woman", "Female", 
+                    ifelse(Gender == "Man", "Male", Gender)),
+    EdLevel = case_when(
+      str_detect(EdLevel, "(?i)master") ~ "Masters",
+      str_detect(EdLevel, "(?i)associate") ~"Associates",
+      str_detect(EdLevel, "(?i)bachelor") ~ "Bachelors",
+      str_detect(EdLevel, "(?i)doctoral") ~ "Doctorate",
+      str_detect(EdLevel, "(?i)professional") ~ "Professional",
+      str_detect(EdLevel, "(?i)primary") ~ "Primary",
+      str_detect(EdLevel, "(?i)secondary") ~ "Secondary",
+      str_detect(EdLevel, "(?i)college") ~ "Some College",
+      str_detect(EdLevel, "(?i)never") ~ "No Education",
+      str_detect(EdLevel, "(?i)else") ~ "Something Else",
+      TRUE ~ EdLevel
+    ),
+    Employment = case_when(
+      str_detect(Employment, "(?i)full") ~ "Full-Time",
+      str_detect(Employment, "(?i)retired") ~ "Retired",
+      str_detect(Employment, "(?i)part") ~ "Part-Time",
+      str_detect(Employment, "(?i)independent") ~ "Self-Employed"
+    ),
+    Country = case_when(
+      str_detect(Country, "(?i)america") ~ "United States",
+      TRUE ~ Country
+    )
+  ) %>%
+  filter(Gender %in% c("Female", "Male")) %>%
+  filter(Year %in% 2018:2022) %>%
+  filter(!is.na(AnnualSalary)) %>% 
+  filter(Country == "United States") %>%
+  select(-c(OrgSize, YearsCodePro, DevType, Age, PlatformWorkedWith, LanguageWorkedWith, DatabaseWorkedWith)) %>%
+  na.omit() %>%
+  mutate(
+    Gender = as.factor(Gender),
+    Employment = as.factor(Employment),
+    EdLevel = as.factor(EdLevel),
+    Country = as.factor(Country)) %>%
+  mutate_at(
+    vars(python:aws),   # Specify the range of columns you want to convert
+    as.factor  )
+
+# 1921 missing values in EdLevel
+# 292 missing values in Employment
+# 7548 missing values in OrgSize
+# 832 missing values in YearsCodePro
+```
+
+The following table shows the list of variables we will be considering in this analysis.
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+library(gt)
+
+# Extract variable names from wide_stack
+variable_names <- names(wide_stack)
+
+# Create a data frame with variable names
+variable_names_df <- data.frame(Variable = variable_names)
+
+# Create a gt table
+variable_names_table <- variable_names_df %>%
+  gt() %>%
+  tab_header(title = md("**Variable Names**"))
+
+variable_names_table
+```
+
+```{r}
+glimpse(wide_stack)
+```
+
+Converting female and male salary distributions to z-scores to compare.
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+# calculate z-score
+wide_stack %>%
+  group_by(Gender) %>%
+  mutate(
+    z_score = (AnnualSalary - mean(AnnualSalary)) / sd(AnnualSalary)
+  ) %>%
+  ungroup() %>%
+  ggplot(aes(x = z_score, y = as.factor(Gender), fill = Gender)) +
+    geom_boxplot() +
+    scale_x_continuous(limits = c(0, 20)) +
+    scale_y_discrete(labels = c("Female", "Male")) +
+    labs(
+      title = "Z-Score Distribution of Salaries by Gender",
+      x = "Z-Score",
+      y = "Gender"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(face = "italic", hjust = 0.5),
+      legend.position = "none"
+    ) +
+    coord_flip()
+
+    # geom_histogram(binwidth = .25, alpha = 0.75) +
+    # scale_x_continuous(limits = c(0, 5)) +
+    # labs(
+    #   title = "Distribution of Salaries by Gender") +
+    # ylab("Frequency") +
+    # xlab("Z-Score") +
+    # theme(axis.text.x = element_text(angle = 45, hjust = 1),
+    #       plot.title = element_text(face = "bold", hjust = 0.5),
+    #       plot.subtitle = element_text(face = "italic", hjust = 0.5)) %>%
+```
+
+## Data Analysis
+
+
+
+We will create a multiple linear regression model.
+
+```{r}
+m_salary <- lm(AnnualSalary ~ Gender, data = wide_stack)
+summary(m_salary)
+```
+
+From the above, we see that the p-value is 0.000000362%. Using a 95% confidence interval, this means that we can reject the null hypothesis. We can see that the adjusted $\R^2$ value is very small, which means that the model does not explain much of the variability of the dependent variable. So, we will first add in all of the variables in our study to determine which are good predictors of the variance. 
+
+```{r}
+wide_stack$Gender <- relevel(wide_stack$Gender, ref = "Female")
+
+m_salary <- lm(AnnualSalary ~ Gender + AgeAvg +  EdLevel + OrgSizeAvg + Employment + YearsCodeProAvg + Year + python + r + scala + julia + microsoftazure + aws + linux + windows + mysql + oracle + ibmdb2 + mongodb, data = wide_stack)
+summary(m_salary)
+```
+
+From the above summary, we can assume that the following variables do not have a significant impact on annual salary: 
+
+- Average Age: the p-value is 98.1%
+- Education level is not a significant predictor
+- Employment types "retired" & "self-employed" are not significant
+- YearsCodeProAvg is not significant
+- Python, R, Julia, Windows, MySQL, Oracle, IBM DB2, and Mongo DB are not significant
+
+When the p-value is higher than the 5% significance level, this means that this variable is not statistically significant in predicting the response variable. So, we will remove the above variables and take another look.
+
+```{r}
+# wide_stack_filtered <- wide_stack %>%
+#   filter(Employment != "Retired",
+#          Employment != "Self-Employed",
+#          )
+
+wide_stack_filtered$Gender <- relevel(wide_stack_filtered$Gender, ref = "Female")
+
+m_salary_update <- lm(AnnualSalary ~ Gender + OrgSizeAvg + Employment + Year + scala + microsoftazure + aws + linux, data = wide_stack_filtered)
+summary(m_salary_update)
+```
+
+
+
+The four conditions of multiple linear regression are:
+
+-   linearity
+
+-   normality
+
+-   constant variability
+
+-   independence of residuals
+
+First, we will look at linearity. From the below plot, we can see that there is no obvious trend in the distribution. Hence, we can assume linearity.
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(data = m_salary_update, aes(x = .fitted, y = .resid)) +
+  geom_point()
+```
+
+Next, we will look at normality.
+
+
+```{r, warning = FALSE, message = FALSE}
+ggplot(data = m_salary_update, aes(sample = .resid)) + 
+  stat_qq() +
+  stat_qq_line()
+```
+
+## Conclusion
