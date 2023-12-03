@@ -146,21 +146,45 @@ extract_list_cols <- function(df, colname, values_to_search) {
 post_build_mutations <- function(wide_stack) {
   return(wide_stack %>%
     mutate(
-
-      sexuality_grouped = case_when(
-        #lgbtq   straight <NA>
-        #34829   285006   140463
-        grepl("Straight / Heterosexual|Straight or heterosexual", Sexuality, ignore.case = TRUE) ~ "straight",
-        grepl("Bisexual|Gay or Lesbian|Queer|Asexual|Prefer to self-describe:|Prefer not to say", Sexuality, ignore.case = TRUE) ~ "lgbtq",
-        TRUE ~ NA_character_  # NA_character_ is used to create NA values in character vectors
-      ),
-      ethnicity_grouped = case_when(
-        # minority non-minority  <NA>
-        # 110615   242511        107172
-        grepl("White|European", Ethnicity, ignore.case = TRUE) ~ "non-minority",
-        Ethnicity %in% c(NA, "Prefer not to say", "Or, in your own words:", "I don’t know", "I prefer not to say") ~ NA_character_,
-        TRUE ~ "minority"
-      )
+    sexuality_grouped = case_when(
+      #lgbtq   straight <NA>
+      #34829   285006   140463
+      grepl("Straight / Heterosexual|Straight or heterosexual", Sexuality, ignore.case = TRUE) ~ "straight",
+      grepl("Bisexual|Gay or Lesbian|Queer|Asexual|Prefer to self-describe:|Prefer not to say", Sexuality, ignore.case = TRUE) ~ "lgbtq",
+      TRUE ~ NA_character_  # NA_character_ is used to create NA values in character vectors
+    ),
+    ethnicity_grouped = case_when(
+      # minority non-minority  <NA>
+      # 110615   242511        107172
+      grepl("White|European", Ethnicity, ignore.case = TRUE) ~ "non-minority",
+      Ethnicity %in% c(NA, "Prefer not to say", "Or, in your own words:", "I don’t know", "I prefer not to say") ~ NA_character_,
+      TRUE ~ "minority"
+    ),
+    Gender = ifelse(Gender == "Woman", "Female", 
+      ifelse(Gender == "Man", "Male", Gender)),
+    EdLevel = case_when(
+      str_detect(EdLevel, "(?i)master") ~ "Masters",
+      str_detect(EdLevel, "(?i)associate") ~"Associates",
+      str_detect(EdLevel, "(?i)bachelor") ~ "Bachelors",
+      str_detect(EdLevel, "(?i)doctoral") ~ "Doctorate",
+      str_detect(EdLevel, "(?i)professional") ~ "Professional",
+      str_detect(EdLevel, "(?i)primary") ~ "Primary",
+      str_detect(EdLevel, "(?i)secondary") ~ "Secondary",
+      str_detect(EdLevel, "(?i)college") ~ "Some College",
+      str_detect(EdLevel, "(?i)never") ~ "No Education",
+      str_detect(EdLevel, "(?i)else") ~ "Something Else",
+      TRUE ~ EdLevel
+    ),
+    Employment = case_when(
+      str_detect(Employment, "(?i)full") ~ "Full-Time",
+      str_detect(Employment, "(?i)retired") ~ "Retired",
+      str_detect(Employment, "(?i)part") ~ "Part-Time",
+      str_detect(Employment, "(?i)independent") ~ "Self-Employed"
+    ),
+    Country = case_when(
+      str_detect(Country, "(?i)america") ~ "United States",
+      TRUE ~ Country
+    )
     )
   )
 }
@@ -203,9 +227,6 @@ get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
   aws_entries  <- list(aws = c("AWS", "aws", "Amazon Web Services", "Amazon Web Services (AWS)"))
   wide_stack <- post_build_mutations(wide_stack)
   wide_stack <- extract_list_cols(wide_stack, "PlatformWorkedWith", aws_entries)
-
-
-
 
   if (persist) {
     write.csv(wide_stack, wide_stack_fn, row.names = FALSE)
