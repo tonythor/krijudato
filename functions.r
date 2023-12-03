@@ -8,8 +8,8 @@ library(stringr)
 
 merge_years <- function(years) {
   url_prefix <- "https://tonyfraser-data.s3.amazonaws.com/stack/"
-  select_cols <- c("Year", "OrgSize", "Country", "Employment", "Gender", "EdLevel", "Age", "DevType",
-    "DatabaseWorkedWith", "LanguageWorkedWith", "PlatformWorkedWith", "YearsCodePro", "AnnualSalary")
+  select_cols <- c("Year", "OrgSize", "Country", "Employment", "Gender", "EdLevel", "US_State", "Age", "DevType",
+    "Sexuality", "Ethnicity", "DatabaseWorkedWith", "LanguageWorkedWith", "PlatformWorkedWith", "YearsCodePro", "AnnualSalary")
 
   extract_and_average<- function(year_string) {
     numbers <- as.numeric(str_extract_all(year_string, "\\d+")[[1]])  # Extract numbers
@@ -47,33 +47,48 @@ merge_years <- function(years) {
         LanguageWorkedWith = "HaveWorkedLanguage",
         YearsCodePro = "YearsProgram",
         AnnualSalary = "Salary",
-        PlatformWorkedWith="HaveWorkedPlatform"
+        PlatformWorkedWith="HaveWorkedPlatform",
+        Ethnicity = "Race"
       )
-      add_columns <- c("Age")
+      add_columns <- c("Age", "US_State", "Sexuality")
 
     } else if(year == 2018) {
       rename_list <- c(
         EdLevel = "FormalEducation",
         OrgSize = "CompanySize",
         YearsCodePro = "YearsCoding",
-        AnnualSalary = "ConvertedSalary"
+        AnnualSalary = "ConvertedSalary",
+        Sexuality = "SexualOrientation",
+        Ethnicity = "RaceEthnicity"
       )
-      add_columns <- c()
+      add_columns <- c("US_State")
 
     } else if(year %in% c(2019, 2020)) {
       rename_list <- list(
         AnnualSalary = "ConvertedComp"
       )
-      add_columns <- c()
+      add_columns <- c("US_State")
 
-    } else if(year %in% c(2021, 2022)) {
+    } else if(year == 2021) {
       rename_list <- c(
         AnnualSalary = "ConvertedCompYearly",
         LanguageWorkedWith = "LanguageHaveWorkedWith",
         DatabaseWorkedWith = "DatabaseHaveWorkedWith",
-        PlatformWorkedWith = "PlatformHaveWorkedWith" 
+        PlatformWorkedWith = "PlatformHaveWorkedWith"
       )
       add_columns <- c()
+
+    } else if(year == 2022) {
+      rename_list <- c(
+        AnnualSalary = "ConvertedCompYearly",
+        LanguageWorkedWith = "LanguageHaveWorkedWith",
+        DatabaseWorkedWith = "DatabaseHaveWorkedWith",
+        PlatformWorkedWith = "PlatformHaveWorkedWith"
+      )
+      add_columns <- c("US_State")
+
+
+
     } else {
       rename_list <- list()
     }
@@ -133,6 +148,7 @@ get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
   wide_stack_fn <- "merged_stack_wide.csv"
 
   if (load_from_cache) {
+    yr <- 2017:2022
     if (file.exists(wide_stack_fn)) {
       print("loading wide file from cache")
       return(read.csv(wide_stack_fn))
@@ -141,11 +157,9 @@ get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
       raw_stack <- read.csv(raw_stack_fn)
     } else {
       message("No cache files found. Generating raw and wide files...")
-      yr <- 2017:2022
       raw_stack <- merge_years(yr)
     }
   } else {
-    yr <- 2017:2022
     raw_stack <- merge_years(yr)
   }
 
