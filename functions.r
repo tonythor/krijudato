@@ -143,6 +143,28 @@ extract_list_cols <- function(df, colname, values_to_search) {
 }
 
 
+post_build_mutations <- function(wide_stack) {
+  return(wide_stack %>%
+    mutate(
+
+      sexuality_grouped = case_when(
+        #lgbtq   straight <NA>
+        #34829   285006   140463
+        grepl("Straight / Heterosexual|Straight or heterosexual", Sexuality, ignore.case = TRUE) ~ "straight",
+        grepl("Bisexual|Gay or Lesbian|Queer|Asexual|Prefer to self-describe:|Prefer not to say", Sexuality, ignore.case = TRUE) ~ "lgbtq",
+        TRUE ~ NA_character_  # NA_character_ is used to create NA values in character vectors
+      ),
+      ethnicity_grouped = case_when(
+        # minority non-minority  <NA>
+        # 110615   242511        107172
+        grepl("White|European", Ethnicity, ignore.case = TRUE) ~ "non-minority",
+        Ethnicity %in% c(NA, "Prefer not to say", "Or, in your own words:", "I don’t know", "I prefer not to say") ~ NA_character_,
+        TRUE ~ "minority"
+      )
+    )
+  )
+}
+
 get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
   raw_stack_fn <- "merged_stack_raw.csv"
   wide_stack_fn <- "merged_stack_wide.csv"
@@ -179,7 +201,11 @@ get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
   wide_stack <- extract_vector_cols(wide_stack,  "PlatformWorkedWith", platforms)
 
   aws_entries  <- list(aws = c("AWS", "aws", "Amazon Web Services", "Amazon Web Services (AWS)"))
+  wide_stack <- post_build_mutations(wide_stack)
   wide_stack <- extract_list_cols(wide_stack, "PlatformWorkedWith", aws_entries)
+
+
+
 
   if (persist) {
     write.csv(wide_stack, wide_stack_fn, row.names = FALSE)
