@@ -5,7 +5,6 @@ author: "Kristin Lussi and Tony Fraser"
 date: "December 7th, 2023"
 output:
   slidy_presentation: default
-  ioslides_presentation: default
 ---
 
 ```{r setup, include=FALSE}
@@ -30,17 +29,11 @@ The gender pay gap within the technology industry in the United States has long 
 
 Our data contains 43,655 cases and each case represents an individual. Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. We will only be assessing individuals who identify as solely "female" or "male", who work full-time, and who have an annual salary below $300,000. We have also removed any individuals from the data that did not provide their salary.
 
----
-
-## Introduction
-
 The main question we want to answer is: **Is there a significant difference in salary between males and females within the tech industry?**
 
 The dependent variable is *Annual Salary*. We will utilize multiple linear regression to first determine if we can reject the null hypothesis. The null hypothesis ($H_0$) is: **There is no significant difference in the mean annual salaries between male and females.** The alternative hypothesis ($H_1$) is: **There is a significant difference in the mean annual salaries between males and females.** Once we determine if we can reject the null hypothesis, we will determine which variables are statistically significant in predicting the response variable (Annual Salary).
 
 ## Data Overview
-
-Tony explain how data was obtained.
 
 ```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, output = FALSE}
 source("functions.r")
@@ -48,6 +41,7 @@ library(dplyr)
 library(psych)
 library(gt)
 library(stringr)
+library(gridExtra)
 
 set.seed(4299)
 
@@ -56,31 +50,6 @@ wide_stack <- get_stack_df(persist = TRUE, load_from_cache = TRUE)
 
 wide_stack <- wide_stack %>%
   mutate(
-    Gender = ifelse(Gender == "Woman", "Female", 
-                    ifelse(Gender == "Man", "Male", Gender)),
-    EdLevel = case_when(
-      str_detect(EdLevel, "(?i)master") ~ "Masters",
-      str_detect(EdLevel, "(?i)associate") ~"Associates",
-      str_detect(EdLevel, "(?i)bachelor") ~ "Bachelors",
-      str_detect(EdLevel, "(?i)doctoral") ~ "Doctorate",
-      str_detect(EdLevel, "(?i)professional") ~ "Professional",
-      str_detect(EdLevel, "(?i)primary") ~ "Primary",
-      str_detect(EdLevel, "(?i)secondary") ~ "Secondary",
-      str_detect(EdLevel, "(?i)college") ~ "Some College",
-      str_detect(EdLevel, "(?i)never") ~ "No Education",
-      str_detect(EdLevel, "(?i)else") ~ "Something Else",
-      TRUE ~ EdLevel
-    ),
-    Employment = case_when(
-      str_detect(Employment, "(?i)full") ~ "Full-Time",
-      str_detect(Employment, "(?i)retired") ~ "Other",
-      str_detect(Employment, "(?i)part") ~ "Other",
-      str_detect(Employment, "(?i)independent") ~ "Other"
-    ),
-    Country = case_when(
-      str_detect(Country, "(?i)america") ~ "United States",
-      TRUE ~ Country
-    ),
     python_num = ifelse(python == "yes", 1, 0),
     sql_num = ifelse(sql == "yes",1, 0),
     java_num = ifelse(java == "yes", 1, 0),
@@ -116,8 +85,7 @@ wide_stack <- wide_stack %>%
   filter(Country == "United States") %>%
   filter(Employment == "Full-Time") %>%
   filter(AnnualSalary < 300000) %>%
-  select(-c(Employment, US_State, Sexuality, Ethnicity, OrgSize, YearsCodePro, DevType, Age, PlatformWorkedWith, LanguageWorkedWith, DatabaseWorkedWith)) %>%
-  #na.omit() %>%
+  select(-c(Employment, US_State, Sexuality, Ethnicity, OrgSize, YearsCodePro, Age, PlatformWorkedWith, LanguageWorkedWith, DatabaseWorkedWith)) %>%
   mutate(
     Gender = as.factor(Gender),
     EdLevel = as.factor(EdLevel)) %>%
@@ -126,60 +94,161 @@ wide_stack <- wide_stack %>%
     as.factor)
 ```
 
---- 
+## Data Overview
 
-The following table shows the list of variables we will be considering in this analysis.
+Our study is built on top of six years / 1.55GB of of Stack Overflow [survey data](https://survey.stackoverflow.co). 
 
-```{r, warning = FALSE, message = FALSE, echo = FALSE}
-library(gt)
+### Data engineering pipeline
 
-# Extract variable names from wide_stack
-variable_names <- names(wide_stack)
+Our [pipeline](https://github.com/tonythor/krijudato/blob/develop/functions.r) does the following: 
 
-# Create a data frame with variable names
-variable_names_df <- data.frame(Variable = variable_names)
+1. For each year, download raw survey data file from S3. 
+2. Unify columns per year, and then union all years together.
+3. Explode wide certain multi-value columns. For example, "PlatformWorkedWith" contains both AWS and Google Cloud.
+4. Preprocess certain columns. For example, we aggregate a second grouped_ethnicity column that is only either minority, non-minority, or NA. 
+3. Save the CSV file in the root directory so the markdown can load it from cache.
 
-# Create a gt table
-variable_names_table <- variable_names_df %>%
-  gt() %>%
-  tab_header(title = md("**Variable Names**"))
+### A quick glimpse of data
 
-variable_names_table
+```{r message=FALSE, echo=FALSE}
+glimpse(wide_stack)
+```
+
+### A high-level respondent overview
+The range of respondents includes many types of careers, but is all highly technical in nature. As well, many more men than women responded to this survey, and that most likely implies several different kinds of bias. 
+
+```{r message=FALSE, echo=FALSE}
+salByJobType <- wide_stack %>%
+  mutate(DevType = str_split_fixed(DevType, ';', 2)[, 1]) %>%
+  filter(!is.na(AnnualSalary)) %>%
+  group_by(DevType) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  arrange(desc(AvgSalary)) %>%
+  head(n = 20) %>%
+  ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Top 20 Average Salaries in the U.S. by Job Type") +
+  labs(x = "Job Type", y = "Average Salary")
+
+respGender <- wide_stack %>%
+  filter(Gender %in% c("Female", "Male")) %>%
+  ggplot(aes(x = Year, fill = Gender)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Respondents by gender over years",
+    x = "Year",
+    y = "Number of Respondents",
+    fill = "Gender") +
+  theme_minimal()
+```
+
+```{r fig.width=12}
+grid.arrange(salByJobType, respGender, ncol = 2)
+```
+
+### A random look at gender discrepency
+As we allded to in the project proposal, it wasn't just one or two variables showing a pay gap, it was all of them. We thought we'd add some more descriptive box plots to this presentation before we started deeper analysis.  
+
+```{r message=FALSE, echo=FALSE}
+boxplot_base <- wide_stack %>% 
+  filter(Gender %in% c("Female", "Male")) %>%
+  filter(!is.na(AnnualSalary), !is.na(Gender))
+
+# Filter the base data for each technology
+aws_data_yes <- boxplot_base %>% filter(aws == "yes")
+linux_data_yes <- boxplot_base %>% filter(linux == "yes")
+oracle_data_yes <- boxplot_base %>% filter(oracle == "yes")
+
+miniority <- boxplot_base %>% filter(ethnicity_grouped == "minority")
+non_miniority <- boxplot_base %>% filter(ethnicity_grouped == "non-minority")
+lgbqt <- boxplot_base %>% filter(sexuality_grouped == "lgbtq")
+straight <- boxplot_base %>% filter(sexuality_grouped == "straight")
+
+
+# Create the AWS plot
+aws <- ggplot(aws_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "AWS People",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Linux plot
+linux <- ggplot(linux_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Linux People",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Oracle plot
+oracle <- ggplot(oracle_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Oracle People",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Minority plot
+minority_plot <- ggplot(miniority, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Minorities",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Non-Minority plot
+non_minority_plot <- ggplot(non_miniority, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Non-minorities",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the LGBTQ plot
+lgbqt_plot <- ggplot(lgbqt, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "LGBTQ",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Straight plot
+straight_plot <- ggplot(straight, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Straight",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+```
+
+```{r fig.width=12}
+grid.arrange(aws, linux, oracle, ncol = 3)
+grid.arrange(minority_plot, non_minority_plot, lgbqt_plot , straight_plot, ncol = 4)
 ```
 
 ---
-
-Converting female and male salary distributions to z-scores to compare.
-
-```{r, warning = FALSE, message = FALSE, echo = FALSE}
-# calculate z-score
-wide_stack <- wide_stack %>%
-  group_by(Gender) %>%
-  mutate(
-    z_score = (AnnualSalary - mean(AnnualSalary)) / sd(AnnualSalary)
-  ) %>%
-  ungroup() 
-
-wide_stack %>%
-  ggplot(aes(x = z_score, y = as.factor(Gender), fill = Gender)) +
-    geom_boxplot() +
-    #scale_x_continuous(limits = c(0, 20)) +
-    scale_y_discrete(labels = c("Female", "Male")) +
-    labs(
-      title = "Z-Score Distribution of Salaries by Gender",
-      x = "Z-Score",
-      y = "Gender"
-    ) +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      plot.title = element_text(face = "bold", hjust = 0.5),
-      plot.subtitle = element_text(face = "italic", hjust = 0.5),
-      legend.position = "none"
-    ) +
-    coord_flip()
-```
-
-
 
 ## Data Analysis
 
@@ -203,6 +272,36 @@ ggplot(cor_df, aes(x = Variable, y = Correlation)) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(face = "bold", hjust = 0.5))
+```
+
+---
+
+Converting female and male salary distributions to z-scores to compare.
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE}
+# calculate z-score
+wide_stack <- wide_stack %>%
+  group_by(Gender) %>%
+  mutate(
+    z_score = (AnnualSalary - mean(AnnualSalary)) / sd(AnnualSalary)
+  ) %>%
+  ungroup() 
+
+wide_stack %>%
+  ggplot(aes(x = z_score, y = as.factor(Gender), fill = Gender)) +
+    geom_boxplot() +
+    scale_y_discrete(labels = c("Female", "Male")) +
+    labs(
+      title = "Z-Score Distribution of Salaries by Gender",
+      x = "Z-Score",
+      y = "Gender"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      legend.position = "none"
+    ) +
+    coord_flip()
 ```
 
 ---
@@ -302,6 +401,8 @@ ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
+
+---
 
 ### Independence
 
