@@ -92,9 +92,9 @@ straight <- boxplot_base %>% filter(sexuality_grouped == "straight")
 aws <- ggplot(aws_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
   geom_boxplot() +
   labs(title = "AWS People",
-       x = "Gender",
-       y = "Annual Salary",
-       fill = "Gender") +
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
   theme_minimal()
@@ -103,9 +103,9 @@ aws <- ggplot(aws_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
 linux <- ggplot(linux_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
   geom_boxplot() +
   labs(title = "Linux People",
-       x = "Gender",
-       y = "Annual Salary",
-       fill = "Gender") +
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
   theme_minimal()
@@ -114,9 +114,9 @@ linux <- ggplot(linux_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)
 oracle <- ggplot(oracle_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
   geom_boxplot() +
   labs(title = "Oracle People",
-       x = "Gender",
-       y = "Annual Salary",
-       fill = "Gender") +
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
   theme_minimal()
@@ -125,9 +125,9 @@ oracle <- ggplot(oracle_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gende
 minority_plot <- ggplot(miniority, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
   geom_boxplot() +
   labs(title = "Minorities",
-       x = "Gender",
-       y = "Annual Salary",
-       fill = "Gender") +
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
   theme_minimal()
@@ -136,9 +136,9 @@ minority_plot <- ggplot(miniority, aes(x = Gender, y = AnnualSalary, fill = Gend
 non_minority_plot <- ggplot(non_miniority, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
   geom_boxplot() +
   labs(title = "Non-minorities",
-       x = "Gender",
-       y = "Annual Salary",
-       fill = "Gender") +
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
   theme_minimal()
@@ -147,9 +147,9 @@ non_minority_plot <- ggplot(non_miniority, aes(x = Gender, y = AnnualSalary, fil
 lgbqt_plot <- ggplot(lgbqt, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
   geom_boxplot() +
   labs(title = "LGBTQ",
-       x = "Gender",
-       y = "Annual Salary",
-       fill = "Gender") +
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
   theme_minimal()
@@ -158,15 +158,12 @@ lgbqt_plot <- ggplot(lgbqt, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
 straight_plot <- ggplot(straight, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
   geom_boxplot() +
   labs(title = "Straight",
-       x = "Gender",
-       y = "Annual Salary",
-       fill = "Gender") +
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
   scale_y_continuous(labels = scales::dollar_format()) +
   scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
   theme_minimal()
-
-
-
 ```
 
 ```{r fig.width=12}
