@@ -408,5 +408,8 @@ ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
 
 Since each case represents an individual, we can assume independence. 
 
+---
+
+### what does this tell us
 
 ## Conclusion
