@@ -196,10 +196,10 @@ get_stack_df <- function(persist = TRUE, load_from_cache = TRUE) {
   if (load_from_cache) {
     yr <- 2017:2022
     if (file.exists(wide_stack_fn)) {
-      print("loading wide file from cache")
+      # print("loading wide file from cache")
       return(read.csv(wide_stack_fn))
     } else if (file.exists(raw_stack_fn)) {
-      print("loading raw file from cache, but building wide file")
+      # print("loading raw file from cache, but building wide file")
       raw_stack <- read.csv(raw_stack_fn)
     } else {
       message("No cache files found. Generating raw and wide files...")
