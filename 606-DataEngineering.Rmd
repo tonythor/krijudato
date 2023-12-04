@@ -1,0 +1,174 @@
+---
+title: Data Engineering Section
+author: "Kristin Lussi and Tony Fraser"
+date: "December 7th, 2023"
+output:
+  slidy_presentation: default
+  ioslides_presentation: default
+---
+
+## Data Overview
+
+Our study is built on top of six years / 1.55GB of of Stack Overflow [survey data](https://survey.stackoverflow.co). 
+
+### Data engineering pipeline
+
+Our [pipeline](https://github.com/tonythor/krijudato/blob/develop/functions.r) does the following: 
+
+1. For each year, download raw survey data file from S3. 
+2. Unify columns per year, and then union all years together.
+3. Explode wide certain multi-value columns. For example, "PlatformWorkedWith" contains both AWS and Google Cloud.
+4. Preprocess certain columns. For example, we aggregate a second grouped_ethnicity column that is only either minority, non-minority, or NA. 
+3. Save the CSV file in the root directory so the markdown can load it from cache.
+
+### A quick glimpse of data
+
+```{r message=FALSE, echo=FALSE}
+source("functions.r")
+library(dplyr)
+library(gridExtra)
+library(ggplot2)
+options(scipen=999)
+wide_stack <- get_stack_df(persist = TRUE, load_from_cache = TRUE) 
+wide_stack <- wide_stack %>%
+  filter(AnnualSalary < 325000) %>%
+  filter((Country == "United States") | (Country == "United States of America"))
+glimpse(wide_stack)
+
+```
+
+### A high-level respondent overview
+The range of respondents includes many types of careers, but is all highly technical in nature. As well, many more men than women responded to this survey, and that most likely implies several different kinds of bias. 
+
+```{r message=FALSE, echo=FALSE}
+salByJobType <- wide_stack %>%
+  mutate(DevType = str_split_fixed(DevType, ';', 2)[, 1]) %>%
+  filter(!is.na(AnnualSalary)) %>%
+  group_by(DevType) %>%
+  summarise(AvgSalary = mean(AnnualSalary, na.rm = TRUE)) %>%
+  arrange(desc(AvgSalary)) %>%
+  head(n = 20) %>%
+  ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggtitle("Top 20 Average Salaries in the U.S. by Job Type") +
+  labs(x = "Job Type", y = "Average Salary")
+
+respGender <- wide_stack %>%
+  filter(Gender %in% c("Female", "Male")) %>%
+  ggplot(aes(x = Year, fill = Gender)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Respondents by gender over years",
+    x = "Year",
+    y = "Number of Respondents",
+    fill = "Gender") +
+  theme_minimal()
+```
+
+```{r fig.width=12}
+grid.arrange(salByJobType, respGender, ncol = 2)
+```
+
+### A random look at gender discrepency
+As we allded to in the project proposal, it wasn't just one or two variables showing a pay gap, it was all of them. We thought we'd add some more descriptive box plots to this presentation before we started deeper analysis.  
+
+```{r message=FALSE, echo=FALSE}
+boxplot_base <- wide_stack %>% 
+  filter(Gender %in% c("Female", "Male")) %>%
+  filter(!is.na(AnnualSalary), !is.na(Gender))
+
+# Filter the base data for each technology
+aws_data_yes <- boxplot_base %>% filter(aws == "yes")
+linux_data_yes <- boxplot_base %>% filter(linux == "yes")
+oracle_data_yes <- boxplot_base %>% filter(oracle == "yes")
+
+miniority <- boxplot_base %>% filter(ethnicity_grouped == "minority")
+non_miniority <- boxplot_base %>% filter(ethnicity_grouped == "non-minority")
+lgbqt <- boxplot_base %>% filter(sexuality_grouped == "lgbtq")
+straight <- boxplot_base %>% filter(sexuality_grouped == "straight")
+
+
+# Create the AWS plot
+aws <- ggplot(aws_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "AWS People",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Linux plot
+linux <- ggplot(linux_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Linux People",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Oracle plot
+oracle <- ggplot(oracle_data_yes, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Oracle People",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Minority plot
+minority_plot <- ggplot(miniority, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Minorities",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Non-Minority plot
+non_minority_plot <- ggplot(non_miniority, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Non-minorities",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the LGBTQ plot
+lgbqt_plot <- ggplot(lgbqt, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "LGBTQ",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+
+# Create the Straight plot
+straight_plot <- ggplot(straight, aes(x = Gender, y = AnnualSalary, fill = Gender)) +
+  geom_boxplot() +
+  labs(title = "Straight",
+    x = "Gender",
+    y = "Annual Salary",
+    fill = "Gender") +
+  scale_y_continuous(labels = scales::dollar_format()) +
+  scale_fill_manual(values = c("Female" = "pink", "Male" = "blue")) +
+  theme_minimal()
+```
+
+```{r fig.width=12}
+grid.arrange(aws, linux, oracle, ncol = 3)
+grid.arrange(minority_plot, non_minority_plot, lgbqt_plot , straight_plot, ncol = 4)
+```
+```
+
