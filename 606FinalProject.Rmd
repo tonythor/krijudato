@@ -28,7 +28,11 @@ By using a data set that includes responses from a range of tech professionals, 
 
 The gender pay gap within the technology industry in the United States has long been a subject of concern, reflecting broader societal issues and potential barriers to gender equity. This research paper uses data from the Stack Overflow Developer Survey, spanning multiple years, to conduct an examination of the gender pay gap across various variables. 
 
-Our data contains 51,583 cases and each case represents an individual. Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. We will only be assessing individuals who identify as solely "female" or "male". We have also removed any individuals from the data that did not provide their salary.
+Our data contains 43,655 cases and each case represents an individual. Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. We will only be assessing individuals who identify as solely "female" or "male", who work full-time, and who have an annual salary below $300,000. We have also removed any individuals from the data that did not provide their salary.
+
+---
+
+## Introduction
 
 The main question we want to answer is: **Is there a significant difference in salary between males and females within the tech industry?**
 
@@ -69,34 +73,57 @@ wide_stack <- wide_stack %>%
     ),
     Employment = case_when(
       str_detect(Employment, "(?i)full") ~ "Full-Time",
-      str_detect(Employment, "(?i)retired") ~ "Retired",
-      str_detect(Employment, "(?i)part") ~ "Part-Time",
-      str_detect(Employment, "(?i)independent") ~ "Self-Employed"
+      str_detect(Employment, "(?i)retired") ~ "Other",
+      str_detect(Employment, "(?i)part") ~ "Other",
+      str_detect(Employment, "(?i)independent") ~ "Other"
     ),
     Country = case_when(
       str_detect(Country, "(?i)america") ~ "United States",
       TRUE ~ Country
-    )
+    ),
+    python_num = ifelse(python == "yes", 1, 0),
+    sql_num = ifelse(sql == "yes",1, 0),
+    java_num = ifelse(java == "yes", 1, 0),
+    javascript_num = ifelse(javascript == 'yes', 1, 0),
+    ruby_num = ifelse(ruby == 'yes',1,0),
+    php_num = ifelse(php == 'yes',1,0),
+    c_num = ifelse(c == 'yes',1,0),
+    swift_num = ifelse(swift == 'yes',1,0),
+    scala_num = ifelse(scala == 'yes',1,0),
+    r_num = ifelse(r == 'yes',1,0),
+    rust_num=ifelse(rust == 'yes',1,0),
+    julia_num = ifelse(julia == 'yes',1,0),
+    mysql_num = ifelse(mysql == 'yes',1,0),
+    microsoftsqlserver_num = ifelse(microsoftsqlserver=='yes',1,0),
+    mongodb_num = ifelse(mongodb=='yes',1,0),
+    postgresql_num=ifelse(postgresql=='yes',1,0),
+    oracle_num = ifelse(oracle=='yes',1,0),
+    ibmdb2_num = ifelse(ibmdb2 == 'yes', 1,0),
+    redis_num = ifelse(redis=='yes',1,0),
+    sqlite_num = ifelse(sqlite=='yes',1,0),
+    mariadb_num = ifelse(mariadb=='yes',1,0),
+    microsoftazure_num = ifelse(microsoftazure == 'yes',1,0),
+    googlecloud_num = ifelse(googlecloud=='yes',1,0),
+    ibmcloudorwatson_num = ifelse(ibmcloudorwatson=='yes', 1,0),
+    kubernetes_num = ifelse(kubernetes=='yes', 1,0),
+    linux_num = ifelse(linux=='yes',1,0),
+    windows_num = ifelse(windows == 'yes',1,0),
+    aws_num = ifelse(aws == 'yes', 1, 0)
   ) %>%
   filter(Gender %in% c("Female", "Male")) %>%
   filter(Year %in% 2018:2022) %>%
   filter(!is.na(AnnualSalary)) %>% 
   filter(Country == "United States") %>%
-  select(-c(OrgSize, YearsCodePro, DevType, Age, PlatformWorkedWith, LanguageWorkedWith, DatabaseWorkedWith)) %>%
+  filter(Employment == "Full-Time") %>%
+  filter(AnnualSalary < 300000) %>%
+  select(-c(Employment, US_State, Sexuality, Ethnicity, OrgSize, YearsCodePro, DevType, Age, PlatformWorkedWith, LanguageWorkedWith, DatabaseWorkedWith)) %>%
   #na.omit() %>%
   mutate(
     Gender = as.factor(Gender),
-    Employment = as.factor(Employment),
-    EdLevel = as.factor(EdLevel),
-    Country = as.factor(Country)) %>%
+    EdLevel = as.factor(EdLevel)) %>%
   mutate_at(
-    vars(python:aws),   # Specify the range of columns you want to convert
+    vars(python:aws), 
     as.factor)
-
-# 1921 missing values in EdLevel
-# 292 missing values in Employment
-# 7548 missing values in OrgSize
-# 832 missing values in YearsCodePro
 ```
 
 --- 
@@ -136,7 +163,7 @@ wide_stack <- wide_stack %>%
 wide_stack %>%
   ggplot(aes(x = z_score, y = as.factor(Gender), fill = Gender)) +
     geom_boxplot() +
-    scale_x_continuous(limits = c(0, 20)) +
+    #scale_x_continuous(limits = c(0, 20)) +
     scale_y_discrete(labels = c("Female", "Male")) +
     labs(
       title = "Z-Score Distribution of Salaries by Gender",
@@ -156,50 +183,80 @@ wide_stack %>%
 
 ## Data Analysis
 
+First, we will look at the correlation between the dependent variable and numeric independent variables. 
+
+```{r, warning = FALSE, message = FALSE}
+numeric_data <- select(wide_stack, Year, AnnualSalary, 
+  YearsCodeProAvg, OrgSizeAvg, AgeAvg, python_num,sql_num, java_num, javascript_num, ruby_num, php_num, c_num, swift_num, scala_num, r_num,rust_num, julia_num, mysql_num, microsoftsqlserver_num, mongodb_num, postgresql_num, oracle_num, ibmdb2_num, redis_num, sqlite_num,mariadb_num, microsoftazure_num, googlecloud_num, ibmcloudorwatson_num, kubernetes_num, linux_num, windows_num, aws_num)
+cor_matrix <- cor(numeric_data, use = "complete.obs")
+cor_with_salary <- cor_matrix["AnnualSalary",]
+cor_with_salary <- cor_with_salary[-which(names(cor_with_salary) == "AnnualSalary")]
+cor_df <- data.frame(Variable = names(cor_with_salary), Correlation = cor_with_salary)
+
+ggplot(cor_df, aes(x = Variable, y = Correlation)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Correlations to Annual Salary", 
+       x = "", 
+       y = "Correlation coefficient") +
+  theme_minimal() +
+  ylim(-1, 1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(face = "bold", hjust = 0.5))
+```
+
+---
+
 We will create a multiple linear regression model.
 
 ```{r}
-m_salary <- lm(AnnualSalary ~ Gender, data = wide_stack)
-summary(m_salary)
+wide_stack$Gender <- relevel(wide_stack$Gender, ref = "Male")
+m_salary_gender <- lm(AnnualSalary ~ Gender, data = wide_stack)
+summary(m_salary_gender)
 ```
 
-From the above, we see that the p-value is ____%. Using a 95% confidence interval, having a p-value of less than 5% means that we can reject the null hypothesis. We can see that the adjusted $\R^2$ value is very small, which means that the model does not explain much of the variability of the dependent variable. 
+From the above, we see that the p-value is 0.000000000000022%. Using a 95% confidence interval, having a p-value of less than 5% means that we can reject the null hypothesis. We can see that the adjusted $\R^2$ value is very small (0.6364%), which means that the model does not explain much of the variability of the dependent variable. The coefficient -14,112.9 means that, on average and after accounting for other factors in the model, being female is associated with a decrease of $14,112.9 in annual salary compared to males.
 
 ---
 
-So, we will first add in all of the variables in our study to determine which are good predictors of the variance. 
+So, we will first add in all of the variables in our study to determine which are good predictors of the variance. We will also include the interaction between each variable and Gender, denoted by "Gender * Variable". 
 
 ```{r}
-wide_stack$Gender <- relevel(wide_stack$Gender, ref = "Female")
+wide_stack$EdLevel<- relevel(wide_stack$EdLevel, ref = "Something Else")
 
-m_salary <- lm(AnnualSalary ~ Gender + AgeAvg +  EdLevel + OrgSizeAvg + Employment + YearsCodeProAvg + Year + python + r + scala + julia + microsoftazure + aws + linux + windows + mysql + oracle + ibmdb2 + mongodb, data = wide_stack)
+m_salary <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg + Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:julia + Gender:microsoftazure + Gender:aws + Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2 + Gender:mongodb, data = wide_stack)
+
 summary(m_salary)
 ```
+
 ---
 
-From the previous summary, we can assume that the following variables do not have a significant impact on annual salary: 
+From the previous summary, we can see that there are a few variables that have a very low p-value, which means that they are not statistically significant in the model. These variables are:
 
-- Average Age
-- Education level
-- Employment types "retired" & "self-employed"
-- YearsCodeProAvg
-- Python, R, Julia, Windows, MySQL, Oracle, IBM DB2, and Mongo DB 
+- EdLevel: Something Else
+- mongodb
+- julia
 
-When the p-value is higher than the 5% significance level, this means that this variable is not statistically significant in predicting the response variable. So, we will remove the above variables and take another look.
+The $R^2$ value is 26.14%, which means that approximately 26.14% of the variability in the dependent variable (AnnualSalary) can be explained by the independent variables included in the model. The remaining 73.86% of the variability is unaccounted for by the model. The p-value is 0.000000000000022%, which suggests that there is strong evidence that at least one of the predictors in the model has a non-zero effect, and the overall model is statistically significant. Hence, we can reject the null hypothesis (There is no significant difference in the mean annual salaries between male and females).
+
+We will re-run the model with the above variables removed to see if this improves the $R^2$. 
+
+---
 
 ```{r}
 wide_stack_filtered <- wide_stack %>%
-  filter(Employment != "Retired",
-         Employment != "Self-Employed",
-         )
+  filter(!EdLevel %in% c("Something Else"))
 
-wide_stack_filtered$Gender <- relevel(wide_stack_filtered$Gender, ref = "Female")
+m_salary_filter <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg + Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:microsoftazure + Gender:aws + Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2, data = wide_stack_filtered)
 
-m_salary_update <- lm(AnnualSalary ~ Gender + OrgSizeAvg + Employment + Year + scala + microsoftazure + aws + linux, data = wide_stack_filtered)
-summary(m_salary_update)
+summary(m_salary_filter)
 ```
 
 ---
+
+From the previous summary, we can see that the $R^2$ value has improved to 26.16%. This is not much of an improvement, but after experimenting with removing other variables, it is the highest value attainable. This means that approximately 26.16% of the variability in the dependent variable (AnnualSalary) can be explained by the remaining independent variables included in the model. The p-value is still very small, which means that we can still reject the null hypothesis. 
+
+## Multiple Linear Regression Conditions
 
 The four conditions of multiple linear regression are:
 
@@ -211,19 +268,44 @@ The four conditions of multiple linear regression are:
 
 -   independence of residuals
 
+---
+
+### Linearity
+
 First, we will look at linearity. From the below plot, we can see that there is no obvious trend in the distribution. Hence, we can assume linearity.
 
 ```{r, message = FALSE, warning = FALSE}
-ggplot(data = m_salary_update, aes(x = .fitted, y = .resid)) +
+ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
   geom_point()
 ```
 
-Next, we will look at normality.
+---
+
+### Normality
+
+Next, we will look at normality. In the below plot, we can see that the line mostly falls on the normal line. We can assume normality.
 
 ```{r, warning = FALSE, message = FALSE}
-ggplot(data = m_salary_update, aes(sample = .resid)) + 
+ggplot(data = m_salary, aes(sample = .resid)) +
   stat_qq() +
   stat_qq_line()
 ```
+
+---
+
+### Constant Variability
+
+Next, we will look at constant variability. From the below plot, we see that the points are scattered with no apparent pattern around 0. We can assume constant variability.
+
+```{r}
+ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+
+### Independence
+
+Since each case represents an individual, we can assume independence. 
+
 
 ## Conclusion
