@@ -12,24 +12,37 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Abstract
+<!-- Summarize analysis -->
+<!-- Research methods -->
+<!-- Findings/conclusion -->
+<!-- Significance of our findings -->
 
-Summarize analysis
+* Summary
 
-Research methods
+This research paper uses six years' worth of the annual Stack Overflow survey data to examine the gender pay gap within the technology sector. Given the source, this self-reported response data isn't necessarily specific to any industry but more about what people do as a job function. This data spans a variety of tech positions such as R programmer, cloud engineer, technical project manager, blockchain developer, etc.
 
-Findings/conclusion
+* Research Methods
 
-significance of our findings
+In this research paper, you will find an overview of descriptive statistics describing the data and specific examples of the gender pay gap. Additionally, we conduct a deep dive using multiple linear regression for some of our more advanced analyses.
 
-By using a data set that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole.
+* Findings and Conclusion
+
+It is clear from this data that there is a significant pay gap. However, even using this massive dataset, there is at least one more critical and yet undefined variable that must be added to model the pay gap. Without the column named "CompanyPercentSexist" in this dataset, we hypothesize that modeling this gap may never be possible.
+
+* Significance of Findings
+
+If nothing else, we need to delve further into this issue. We would like to attempt to collect some funding and perform additional modeling. Our initial ideas involve presenting some additional questions to Stack Overflow, particularly related to geography and industry. While we might not be able to find "CompanyPercentSexist," at least if we can narrow down industry and region, we can report key information to local politicians and the media.
+<!-- 
+By using a data set that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. 
+The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole. -->
 
 ## Introduction
 
-The gender pay gap within the technology industry in the United States has long been a subject of concern, reflecting broader societal issues and potential barriers to gender equity. This research paper uses data from the Stack Overflow Developer Survey, spanning multiple years, to conduct an examination of the gender pay gap across various variables. 
+The gender pay gap within the US tech sector has long been a subject of concern, reflecting broader societal issues and potential barriers to gender equity. 
+This research paper leverages a data set built From six years / 1.55GB of Stack Overflow [survey data](https://survey.stackoverflow.co) to examine the pay 
+gap across many variables. 
 
-Our data contains 43,655 cases and each case represents an individual. Each case consists of a combination of original and extrapolated columns. Original columns consist of Year, organization size (OrgSize), Country, Employment, Gender, education level (EdLevel), Age, developer type (DevType), database knowledge (DatabaseWorkedWith), language knowledge (LanguageWorkedWith), platform knowledge (PlatformWorkedWith), years coding professionally (YearsCodePro), Annual Salary, YearsCodeProAvg, OrgSizeAvg, AgeAvg, and a few others. We will only be assessing individuals who identify as solely "female" or "male", who work full-time, and who have an annual salary below $300,000. We have also removed any individuals from the data that did not provide their salary.
-
-The main question we want to answer is: **Is there a significant difference in salary between males and females within the tech industry?**
+Our aim is to answer the question, **Is there a significant difference in salary between males and females within the tech industry?**
 
 The dependent variable is *Annual Salary*. We will utilize multiple linear regression to first determine if we can reject the null hypothesis. The null hypothesis ($H_0$) is: **There is no significant difference in the mean annual salaries between male and females.** The alternative hypothesis ($H_1$) is: **There is a significant difference in the mean annual salaries between males and females.** Once we determine if we can reject the null hypothesis, we will determine which variables are statistically significant in predicting the response variable (Annual Salary).
 
@@ -94,9 +107,6 @@ wide_stack <- wide_stack %>%
     as.factor)
 ```
 
-## Data Overview
-
-Our study is built on top of six years / 1.55GB of of Stack Overflow [survey data](https://survey.stackoverflow.co). 
 
 ### Data engineering pipeline
 
@@ -147,7 +157,8 @@ grid.arrange(salByJobType, respGender, ncol = 2)
 ```
 
 ### A random look at gender discrepency
-As we allded to in the project proposal, it wasn't just one or two variables showing a pay gap, it was all of them. We thought we'd add some more descriptive box plots to this presentation before we started deeper analysis.  
+As we allded to in the project proposal, it wasn't just one or two variables showing a pay gap, it was all of them. We thought we'd add some more 
+descriptive box plots to this presentation before we started deeper analysis.  
 
 ```{r message=FALSE, echo=FALSE}
 boxplot_base <- wide_stack %>% 
@@ -248,15 +259,15 @@ grid.arrange(aws, linux, oracle, ncol = 3)
 grid.arrange(minority_plot, non_minority_plot, lgbqt_plot , straight_plot, ncol = 4)
 ```
 
----
-
 ## Data Analysis
 
 First, we will look at the correlation between the dependent variable and numeric independent variables. 
 
 ```{r, warning = FALSE, message = FALSE}
 numeric_data <- select(wide_stack, Year, AnnualSalary, 
-  YearsCodeProAvg, OrgSizeAvg, AgeAvg, python_num,sql_num, java_num, javascript_num, ruby_num, php_num, c_num, swift_num, scala_num, r_num,rust_num, julia_num, mysql_num, microsoftsqlserver_num, mongodb_num, postgresql_num, oracle_num, ibmdb2_num, redis_num, sqlite_num,mariadb_num, microsoftazure_num, googlecloud_num, ibmcloudorwatson_num, kubernetes_num, linux_num, windows_num, aws_num)
+  YearsCodeProAvg, OrgSizeAvg, AgeAvg, python_num,sql_num, java_num, javascript_num, ruby_num, php_num, c_num, swift_num, scala_num, r_num,rust_num, 
+  julia_num, mysql_num, microsoftsqlserver_num, mongodb_num, postgresql_num, oracle_num, ibmdb2_num, redis_num, sqlite_num,mariadb_num, 
+  microsoftazure_num, googlecloud_num, ibmcloudorwatson_num, kubernetes_num, linux_num, windows_num, aws_num)
 cor_matrix <- cor(numeric_data, use = "complete.obs")
 cor_with_salary <- cor_matrix["AnnualSalary",]
 cor_with_salary <- cor_with_salary[-which(names(cor_with_salary) == "AnnualSalary")]
@@ -323,20 +334,23 @@ So, we will first add in all of the variables in our study to determine which ar
 ```{r}
 wide_stack$EdLevel<- relevel(wide_stack$EdLevel, ref = "Something Else")
 
-m_salary <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg + Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:julia + Gender:microsoftazure + Gender:aws + Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2 + Gender:mongodb, data = wide_stack)
+m_salary <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg 
++ Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:julia + Gender:microsoftazure + Gender:aws 
++ Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2 + Gender:mongodb, data = wide_stack)
 
 summary(m_salary)
 ```
 
 ---
 
-From the previous summary, we can see that there are a few variables that have a very low p-value, which means that they are not statistically significant in the model. These variables are:
+From the previous summary, we can see that there are a few variables that have a very low p-value, which means that they are not statistically 
+significant in the model. These variables are:
 
 - EdLevel: Something Else
 - mongodb
 - julia
 
-The $R^2$ value is 26.14%, which means that approximately 26.14% of the variability in the dependent variable (AnnualSalary) can be explained by the independent variables included in the model. The remaining 73.86% of the variability is unaccounted for by the model. The p-value is 0.000000000000022%, which suggests that there is strong evidence that at least one of the predictors in the model has a non-zero effect, and the overall model is statistically significant. Hence, we can reject the null hypothesis (There is no significant difference in the mean annual salaries between male and females).
+The $R^2$ value is 26.14%, which means that approximately 26.14% of the variability in the dependent variable (AnnualSalary) can be explained by the independent variables included in the model. The remaining 73.86% of the variability is unaccounted for by the model. The p-value is 0.000000000000022%,  which suggests that there is strong evidence that at least one of the predictors in the model has a non-zero effect, and the overall model is statistically significant. Hence, we can reject the null hypothesis (There is no significant difference in the mean annual salaries between male and females).
 
 We will re-run the model with the above variables removed to see if this improves the $R^2$. 
 
@@ -346,7 +360,9 @@ We will re-run the model with the above variables removed to see if this improve
 wide_stack_filtered <- wide_stack %>%
   filter(!EdLevel %in% c("Something Else"))
 
-m_salary_filter <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg + Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:microsoftazure + Gender:aws + Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2, data = wide_stack_filtered)
+m_salary_filter <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg + 
+Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:microsoftazure + Gender:aws + Gender:linux + Gender:windows + 
+Gender:mysql + Gender:oracle + Gender:ibmdb2, data = wide_stack_filtered)
 
 summary(m_salary_filter)
 ```
