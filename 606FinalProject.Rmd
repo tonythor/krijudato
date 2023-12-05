@@ -437,9 +437,9 @@ We suspect further analyzing factors from this study will continue to be inconcl
 
 1. **Study salaries by gender and location**  Our study doens't take into account state and county. Perhaps this is a tiny town versus big city only problem. Or perhaps the pay gap is only in Portland Oregon. Our data does not provide that dimension. 
 
-2. **Study company salaires by position and gender** Obviously, not all companies big or small have as significant of issues with pay, but certain companies are known to have a notoriusly masive pay gap. We could start with Oracle.  
+2. **Study company salaires by gender** Obviously, not all companies big or small have as significant of issues with pay, but certain companies are known to have a notoriusly masive pay gap. We could start with Oracle.  
 
-3. **Study entire industires by position, gender and salary** There are software developers and project managers that do exactly the same thing in non profits, and in media. Perhaps the industry itself plays one of the biggest roles in the pay gap. 
+3. **Study entire industires by gender and salary** There are software developers and project managers that do exactly the same thing in non profits, and in media. Perhaps the industry itself plays one of the biggest roles in the pay gap. 
 
 
 
