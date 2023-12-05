@@ -32,6 +32,7 @@ It is clear from this data that there is a significant pay gap. However, even us
 * Significance of Findings
 
 If nothing else, we need to delve further into this issue. We would like to attempt to collect some funding and perform additional modeling. Our initial ideas involve presenting some additional questions to Stack Overflow, particularly related to geography and industry. While we might not be able to find "CompanyPercentSexist," at least if we can narrow down industry and region, we can report key information to local politicians and the media.
+
 <!-- 
 By using a data set that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. 
 The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole. -->
@@ -118,7 +119,20 @@ Our [pipeline](https://github.com/tonythor/krijudato/blob/develop/functions.r) d
 4. Preprocess certain columns. For example, we aggregate a second grouped_ethnicity column that is only either minority, non-minority, or NA. 
 3. Save the CSV file in the root directory so the markdown can load it from cache.
 
-### A quick glimpse of data
+### How we filtered the base data set
+We filtered our more than 500K raw records all the way down to 43,655 for this study. Our working dataset includes only those who: 
+
+* Provided their salary
+
+* Work in the United States
+
+* Identify as male or female
+
+* Have full time jobs
+
+* Have an annual salary below 300,000
+
+### A quick glimpse of filtered data
 
 ```{r message=FALSE, echo=FALSE}
 glimpse(wide_stack)
@@ -156,9 +170,38 @@ respGender <- wide_stack %>%
 grid.arrange(salByJobType, respGender, ncol = 2)
 ```
 
-### A random look at gender discrepency
-As we allded to in the project proposal, it wasn't just one or two variables showing a pay gap, it was all of them. We thought we'd add some more 
-descriptive box plots to this presentation before we started deeper analysis.  
+### A non-gender based look at correlation
+We converted many independent variables to integers so we could see could look at correlation to the dependent variable.
+
+```{r, warning = FALSE, message = FALSE, echo=FALSE}
+numeric_data <- select(wide_stack, Year, AnnualSalary, 
+  YearsCodeProAvg, OrgSizeAvg, AgeAvg, python_num,sql_num, java_num, javascript_num, ruby_num, php_num, c_num, swift_num, scala_num, r_num,rust_num, 
+  julia_num, mysql_num, microsoftsqlserver_num, mongodb_num, postgresql_num, oracle_num, ibmdb2_num, redis_num, sqlite_num,mariadb_num, 
+  microsoftazure_num, googlecloud_num, ibmcloudorwatson_num, kubernetes_num, linux_num, windows_num, aws_num)
+cor_matrix <- cor(numeric_data, use = "complete.obs")
+cor_with_salary <- cor_matrix["AnnualSalary",]
+cor_with_salary <- cor_with_salary[-which(names(cor_with_salary) == "AnnualSalary")]
+cor_df <- data.frame(Variable = names(cor_with_salary), Correlation = cor_with_salary)
+
+corr_chart <- ggplot(cor_df, aes(x = Variable, y = Correlation)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Correlations to Annual Salary", 
+       x = "", 
+       y = "Correlation coefficient") +
+  theme_minimal() +
+  ylim(-1, 1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(face = "bold", hjust = 0.5))
+```
+
+```{r fig.width=12}
+grid.arrange(corr_chart, ncol = 1)
+```
+
+
+### A quick look at gender discrepency
+As a final series of charts, and as we alluded to in the project proposal, it wasn't just one or two variables showing a pay gap, it was all of them. We thought we'd add some more  descriptive box plots to this presentation before we started deeper analysis.  
 
 ```{r message=FALSE, echo=FALSE}
 boxplot_base <- wide_stack %>% 
@@ -259,36 +302,10 @@ grid.arrange(aws, linux, oracle, ncol = 3)
 grid.arrange(minority_plot, non_minority_plot, lgbqt_plot , straight_plot, ncol = 4)
 ```
 
+
+
 ## Data Analysis
-
-First, we will look at the correlation between the dependent variable and numeric independent variables. 
-
-```{r, warning = FALSE, message = FALSE}
-numeric_data <- select(wide_stack, Year, AnnualSalary, 
-  YearsCodeProAvg, OrgSizeAvg, AgeAvg, python_num,sql_num, java_num, javascript_num, ruby_num, php_num, c_num, swift_num, scala_num, r_num,rust_num, 
-  julia_num, mysql_num, microsoftsqlserver_num, mongodb_num, postgresql_num, oracle_num, ibmdb2_num, redis_num, sqlite_num,mariadb_num, 
-  microsoftazure_num, googlecloud_num, ibmcloudorwatson_num, kubernetes_num, linux_num, windows_num, aws_num)
-cor_matrix <- cor(numeric_data, use = "complete.obs")
-cor_with_salary <- cor_matrix["AnnualSalary",]
-cor_with_salary <- cor_with_salary[-which(names(cor_with_salary) == "AnnualSalary")]
-cor_df <- data.frame(Variable = names(cor_with_salary), Correlation = cor_with_salary)
-
-ggplot(cor_df, aes(x = Variable, y = Correlation)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Correlations to Annual Salary", 
-       x = "", 
-       y = "Correlation coefficient") +
-  theme_minimal() +
-  ylim(-1, 1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        plot.title = element_text(face = "bold", hjust = 0.5))
-```
-
----
-
 Converting female and male salary distributions to z-scores to compare.
-
 ```{r, warning = FALSE, message = FALSE, echo = FALSE}
 # calculate z-score
 wide_stack <- wide_stack %>%
