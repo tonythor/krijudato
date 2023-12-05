@@ -304,7 +304,7 @@ grid.arrange(minority_plot, non_minority_plot, lgbqt_plot , straight_plot, ncol 
 
 
 
-## Data Analysis
+## Data analysis
 Converting female and male salary distributions to z-scores to compare.
 ```{r, warning = FALSE, message = FALSE, echo = FALSE}
 # calculate z-score
@@ -388,34 +388,20 @@ summary(m_salary_filter)
 
 From the previous summary, we can see that the $R^2$ value has improved to 26.16%. This is not much of an improvement, but after experimenting with removing other variables, it is the highest value attainable. This means that approximately 26.16% of the variability in the dependent variable (AnnualSalary) can be explained by the remaining independent variables included in the model. The p-value is still very small, which means that we can still reject the null hypothesis. 
 
-## Multiple Linear Regression Conditions
+## Assuring compliance with model conditions
 
-The four conditions of multiple linear regression are:
-
--   linearity
-
--   normality
-
--   constant variability
-
--   independence of residuals
-
----
+The four required conditions of multiple linear regression are linearity, normality, constant variability and independence of residuals. After reviewing all four conditions below, we believe a multiple linear regression is valid to use. 
 
 ### Linearity
-
-First, we will look at linearity. From the below plot, we can see that there is no obvious trend in the distribution. Hence, we can assume linearity.
+We can assume linearity as we can see ther is no obvious trend in the distrobution.
 
 ```{r, message = FALSE, warning = FALSE}
 ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
   geom_point()
 ```
 
----
-
 ### Normality
-
-Next, we will look at normality. In the below plot, we can see that the line mostly falls on the normal line. We can assume normality.
+We can assume normality as the line mostly falls on the normal line. 
 
 ```{r, warning = FALSE, message = FALSE}
 ggplot(data = m_salary, aes(sample = .resid)) +
@@ -423,11 +409,8 @@ ggplot(data = m_salary, aes(sample = .resid)) +
   stat_qq_line()
 ```
 
----
-
 ### Constant Variability
-
-Next, we will look at constant variability. From the below plot, we see that the points are scattered with no apparent pattern around 0. We can assume constant variability.
+Points are scattered with no apparent pattern around 0, and therefore we can assume constant variability.
 
 ```{r}
 ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
@@ -435,14 +418,28 @@ ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
 
----
 
 ### Independence
 
-Since each case represents an individual, we can assume independence. 
-
----
-
-### what does this tell us
+We assume independence. Each case represents an individual response, and responses even if done by the same people have a full year between them. 
 
 ## Conclusion
+
+### Findings
+After having whittled down gigabytes worth of data across 557 raw variables that we expanded into over 750 total variables, two things are clear to us. 
+
+1. There is at least one more unkwon variable that plays a massive factor in describing the gap between gender pay in the technology jobs
+2. That variable is not incldued in this study
+
+### Reccomendations
+
+We suspect further analyzing factors from this study will continue to be inconclusive, but our primary reccomendation is to keep this study going, to find funding, or do whatever it takes to persevere. We do believe there are three directions that would all be good to go down next. All thre eare implausable, but if we coudl dig into them, we are convident they would help us find influential pay gap variables. 
+
+1. **Study salaries by gender and location**  Our study doens't take into account state and county. Perhaps this is a tiny town versus big city only problem. Or perhaps the pay gap is only in Portland Oregon. Our data does not provide that dimension. 
+
+2. **Study company salaires by position and gender** Obviously, not all companies big or small have as significant of issues with pay, but certain companies are known to have a notoriusly masive pay gap. We could start with Oracle.  
+
+3. **Study entire industires by position, gender and salary** There are software developers and project managers that do exactly the same thing in non profits, and in media. Perhaps the industry itself plays one of the biggest roles in the pay gap. 
+
+
+
