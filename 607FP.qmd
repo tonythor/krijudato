@@ -1,0 +1,26 @@
+---
+title: "Finding Value Within the Data Science Industry"
+author: "Team Krijudato (Kristin L, Julia F, David G, Tony F)"
+date: "5 Dec 2023"
+output:
+  pdf_document: default
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    includes:
+      in_header: header.html
+    css: ./lab.css
+    highlight: pygments
+    theme: cerulean
+editor_options: 
+  chunk_output_type: console
+---
+
+## abstrach
+
+## otehr stuff
+
+## more otehr stuff
+
+## conclusions
