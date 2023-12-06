@@ -407,7 +407,7 @@ Having examined the four essential conditions for multiple linear regression, in
 We can assume linearity, as there is no apparent trend observed in the distribution.
 
 ```{r, message = FALSE, warning = FALSE}
-ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
+ggplot(data = m_salary_filter, aes(x = .fitted, y = .resid)) +
   geom_point()
 ```
 
@@ -415,7 +415,7 @@ ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
 We can assume normality as the line mostly falls on the normal line. 
 
 ```{r, warning = FALSE, message = FALSE}
-ggplot(data = m_salary, aes(sample = .resid)) +
+ggplot(data = m_salary_filter, aes(sample = .resid)) +
   stat_qq() +
   stat_qq_line()
 ```
@@ -425,7 +425,7 @@ ggplot(data = m_salary, aes(sample = .resid)) +
 Points are scattered with no apparent pattern around 0, indicating that we can assume constant variability.
 
 ```{r}
-ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
+ggplot(data = m_salary_filter, aes(x = .fitted, y = .resid)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
