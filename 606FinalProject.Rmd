@@ -11,30 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Abstract
-<!-- Summarize analysis -->
-<!-- Research methods -->
-<!-- Findings/conclusion -->
-<!-- Significance of our findings -->
-
-* Summary
-
 This research paper uses six years' worth of the annual Stack Overflow survey data to examine the gender pay gap within the technology sector. It's important to note that the self-reported responses in this dataset are not necessarily specific to any particular industry but rather focus on individuals' job functions. This data spans a variety of tech positions such as R programmer, cloud engineer, technical project manager, blockchain developer, etc.
 
-* Research Methods
+Regarding research methods, we employ descriptive statistics to describe the data at an overview level, along with providing specific examples of the gender pay gap. Additionally, we conduct a deep dive using simple and multiple linear regression for some of our more advanced analyses.
 
-In this research paper, you will find an overview of descriptive statistics describing the data and specific examples of the gender pay gap. Additionally, we conduct a deep dive using simple and multiple linear regression for some of our more advanced analyses.
+The data clearly indicates the presence of a substantial pay gap. However, despite the extensive nature of this dataset, it is apparent that there is at least one crucial yet unidentified variable that needs to be incorporated to effectively model the pay gap. We propose that without the inclusion of the "CompanyPercentSexist" column in this dataset, gaining a comprehensive understanding and modeling of this pay gap may remain challenging.
 
-* Findings and Conclusion
-
-The data strongly indicates the presence of a substantial pay gap. However, despite the extensive nature of this dataset, it is apparent that there is at least one crucial yet unidentified variable that needs to be incorporated to effectively model the pay gap. We propose that without the inclusion of the "CompanyPercentSexist" column in this dataset, the comprehensive understanding and modeling of this pay gap may remain challenging.
-
-* Significance of Findings
-
-At the very least, we need to delve further into this issue. We would like to attempt to collect some funding and perform additional modeling. Our initial ideas involve presenting some additional questions to Stack Overflow, particularly related to geography and industry. While we might not be able to find "CompanyPercentSexist," narrowing our focus to industry and region could enable us to provide essential information to local politicians and the media. 
-
-<!-- 
-By using a data set that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. 
-The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole. -->
+Upon completing this study, we recommend persevering and potentially seeking funding for further research and modeling. Our first immediate suggested action would be proposing additional questions to Stack Overflow, particularly those related to geography and industry. While we might not be able to find "CompanyPercentSexist," narrowing our focus to industry and region could enable us to provide essential information to local politicians and the media.
 
 ## Introduction
 
@@ -158,14 +141,14 @@ salByJobType <- wide_stack %>%
   ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +
   geom_bar(stat = "identity", position = "dodge") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top 20 Average Salaries in the U.S. by Job Type") +
+  ggtitle("Overview: Respondents by salary and job type") +
   labs(x = "Job Type", y = "Average Salary")
 
 respGender <- wide_stack %>%
   filter(Gender %in% c("Female", "Male")) %>%
   ggplot(aes(x = Year, fill = Gender)) +
   geom_bar(position = "dodge") +
-  labs(title = "Respondents by gender over years",
+  labs(title = "Overview: Yearly survey respondents by gender",
     x = "Year",
     y = "Number of Respondents",
     fill = "Gender") +
