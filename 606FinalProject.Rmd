@@ -312,36 +312,6 @@ grid.arrange(minority_plot, non_minority_plot, lgbqt_plot , straight_plot, ncol 
 
 ## Data analysis
 
-Standardizing the salary distributions for both females and males using z-scores for comparative analysis.
-
-```{r, warning = FALSE, message = FALSE, echo = FALSE}
-# calculate z-score
-wide_stack <- wide_stack %>%
-  group_by(Gender) %>%
-  mutate(
-    z_score = (AnnualSalary - mean(AnnualSalary)) / sd(AnnualSalary)
-  ) %>%
-  ungroup() 
-
-wide_stack %>%
-  ggplot(aes(x = z_score, y = as.factor(Gender), fill = Gender)) +
-    geom_boxplot() +
-    scale_y_discrete(labels = c("Female", "Male")) +
-    labs(
-      title = "Z-Score Distribution of Salaries by Gender",
-      x = "Z-Score",
-      y = "Gender"
-    ) +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      plot.title = element_text(face = "bold", hjust = 0.5),
-      legend.position = "none"
-    ) +
-    coord_flip()
-```
-
----
-
 ### Simple Linear Regression
 
 To determine if we can reject the null hypothesis, we will begin with constructing a simple linear regression model with annual salary as the dependent variable and gender as the independent variable.
@@ -363,40 +333,20 @@ Now that we have determined that we can reject the null hypothesis, we will cons
 ```{r}
 wide_stack$EdLevel<- relevel(wide_stack$EdLevel, ref = "Something Else")
 
-m_salary <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg 
-+ Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:julia + Gender:microsoftazure + Gender:aws 
-+ Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2 + Gender:mongodb, data = wide_stack)
+m_salary <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped +
+   Gender:EdLevel + Gender:OrgSizeAvg +
+   Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:julia +
+   Gender:microsoftazure + Gender:aws + Gender:mariadb + Gender:mongodb +
+   Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2 + 
+   Gender:c + Gender:googlecloud + Gender:ibmcloudorwatson + Gender:java + 
+   Gender:javascript + Gender:kubernetes + + Gender:microsoftsqlserver + Gender:php +
+   Gender:postgresql + Gender:redis + Gender:ruby + Gender:rust + Gender:sqlite +
+   Gender:swift, data = wide_stack)
 
 summary(m_salary)
 ```
 
-From the above summary, we can see that there are a few variables that have a very low p-value, which means that they are not statistically 
-significant in the model. These variables are:
-
-- EdLevel: Something Else
-- mongodb
-- julia
-
-The $R^2$ value is 26.14%, which means that approximately 26.14% of the variability in the dependent variable (AnnualSalary) can be explained by the independent variables included in the model. The remaining 73.86% of the variability is unaccounted for by the model. The p-value is 0.000000000000022%,  which suggests that there is strong evidence that at least one of the predictors in the model has a non-zero effect, and the overall model is statistically significant. Hence, we can reject the null hypothesis (There is no significant difference in the mean annual salaries between male and females).
-
----
-
-### Removing Insignificant Variables
-
-Upon eliminating the mentioned variables from the model, we will conduct a subsequent run to evaluate any potential improvement in the $R^2$ value. 
-
-```{r}
-wide_stack_filtered <- wide_stack %>%
-  filter(!EdLevel %in% c("Something Else"))
-
-m_salary_filter <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg + 
-Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:microsoftazure + Gender:aws + Gender:linux + Gender:windows + 
-Gender:mysql + Gender:oracle + Gender:ibmdb2, data = wide_stack_filtered)
-
-summary(m_salary_filter)
-```
-
-From the above summary, we can see that the $R^2$ value has improved to 26.16%. This is not much of an improvement, but after experimenting with removing other variables, it is the highest value attainable. This means that approximately 26.16% of the variability in the dependent variable (AnnualSalary) can be explained by the remaining independent variables included in the model. The persistently small p-value allows us to maintain the rejection of the null hypothesis.
+The $R^2$ value is 30.25%, which means that approximately 30.25% of the variability in the dependent variable (AnnualSalary) can be explained by the independent variables included in the model. The remaining 69.75% of the variability is unaccounted for by the model. The p-value is 0.000000000000022%,  which suggests that there is strong evidence that at least one of the predictors in the model has a non-zero effect, and the overall model is statistically significant. Hence, we can reject the null hypothesis (There is no significant difference in the mean annual salaries between male and females).
 
 ## Assuring compliance with model conditions
 
@@ -407,7 +357,7 @@ Having examined the four essential conditions for multiple linear regression, in
 We can assume linearity, as there is no apparent trend observed in the distribution.
 
 ```{r, message = FALSE, warning = FALSE}
-ggplot(data = m_salary_filter, aes(x = .fitted, y = .resid)) +
+ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
   geom_point()
 ```
 
@@ -415,7 +365,7 @@ ggplot(data = m_salary_filter, aes(x = .fitted, y = .resid)) +
 We can assume normality as the line mostly falls on the normal line. 
 
 ```{r, warning = FALSE, message = FALSE}
-ggplot(data = m_salary_filter, aes(sample = .resid)) +
+ggplot(data = m_salary, aes(sample = .resid)) +
   stat_qq() +
   stat_qq_line()
 ```
@@ -425,7 +375,7 @@ ggplot(data = m_salary_filter, aes(sample = .resid)) +
 Points are scattered with no apparent pattern around 0, indicating that we can assume constant variability.
 
 ```{r}
-ggplot(data = m_salary_filter, aes(x = .fitted, y = .resid)) +
+ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
@@ -440,12 +390,12 @@ Given that each case represents an individual response, we can reasonably assume
 ### Findings
 Having analyzing gigabytes of data spanning 557 raw variables, which were expanded to over 750 variables, the following conclusions have become evident:
 
-1. The linear model that we've developed only accounts for 26.16% of the variability of the dependent variable
+1. The linear model that we've developed only accounts for 30.25% of the variability of the dependent variable
 2. There is another variable, or variables, not previously considered that plays a pivotal role in describing the wage gap within the technology industry
 
 In conclusion, there is an obvious gap in salaries between males and females shown in our regression model. 
 
-For example, the coefficients for GenderFemale:awsyes and GenderMale:awsyes represent the estimated change in Annual Salary associated with a one-unit change in the variable "awsyes", while holding all other variables constant. The coefficients for GenderFemale:awsyes and GenderMale:awsyes are 12,756 and 14,460, respectively. Both coefficients are positive, which means that, on average, both men and women who use AWS tend to have higher salaries comapred to those who do not use AWS. However, the magnitude of the coefficient for GenderMale:awsyes is higher than that for GenderFemale:aws yes. This suggests that, on average, men who use AWS have a higher estimated increase in Annual salary compared to women who use AWS.
+For example, the coefficients for GenderFemale:awsyes and GenderMale:awsyes represent the estimated change in Annual Salary associated with a one-unit change in the variable "awsyes", while holding all other variables constant. The coefficients for GenderFemale:awsyes and GenderMale:awsyes are 9,247 and 10,137, respectively. Both coefficients are positive, which means that, on average, both men and women who use AWS tend to have higher salaries compared to those who do not use AWS. However, the magnitude of the coefficient for GenderMale:awsyes is higher than that for GenderFemale:aws yes. This suggests that, on average, men who use AWS have a higher estimated increase in Annual salary compared to women who use AWS.
 
 This trend is shown across several variables in our model. In conjunction with the results from our simple linear regression model, we can conclude that our model supports our alternative hypothesis that there is a significant difference in the mean annual salaries between males and females. Importantly, this difference in mean annual salaries is not confined to a single variable but holds true across multiple variables considered in the study.
 
