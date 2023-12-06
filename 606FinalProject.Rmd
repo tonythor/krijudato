@@ -34,7 +34,7 @@ At the very least, we need to delve further into this issue. We would like to at
 
 <!-- 
 By using a data set that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. 
-The results of this study could guide evidence-based efforts to promote exclusivity and equality, ultimately benefiting both the technology sector and society as a whole. -->
+The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole. -->
 
 ## Introduction
 
