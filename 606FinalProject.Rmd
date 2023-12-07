@@ -1,6 +1,5 @@
 ---
-title: A Comprehensive Analysis of Gender Pay Gap in the Tech Industry Using Stack
-  Overflow Survey Data
+title: A Comprehensive Analysis of Gender Pay Gap in the Tech Industry
 author: "Kristin Lussi and Tony Fraser"
 date: "December 7th, 2023"
 output:
@@ -12,40 +11,30 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Abstract
-<!-- Summarize analysis -->
-<!-- Research methods -->
-<!-- Findings/conclusion -->
-<!-- Significance of our findings -->
+This research paper uses six years' worth of the annual Stack Overflow survey data to examine the gender pay gap within the technology sector. It's important to note that the self-reported responses in this dataset are not necessarily specific to any particular industry but rather focus on individuals' job functions. This data spans a variety of tech positions such as R programmer, cloud engineer, technical project manager, blockchain developer, etc.
 
-* Summary
+Regarding research methods, we employ descriptive statistics to describe the data at an overview level, along with providing specific examples of the gender pay gap. Additionally, we conduct a deep dive using simple and multiple linear regression for some of our more advanced analyses.
 
-This research paper uses six years' worth of the annual Stack Overflow survey data to examine the gender pay gap within the technology sector. Given the source, this self-reported response data isn't necessarily specific to any industry but more about what people do as a job function. This data spans a variety of tech positions such as R programmer, cloud engineer, technical project manager, blockchain developer, etc.
+The data clearly indicates the presence of a substantial pay gap. However, despite the extensive nature of this dataset, it is apparent that there is at least one crucial yet unidentified variable that needs to be incorporated to effectively model the pay gap. We propose that without the inclusion of the "CompanyPercentSexist" column in this dataset, gaining a comprehensive understanding and modeling of this pay gap may remain challenging.
 
-* Research Methods
-
-In this research paper, you will find an overview of descriptive statistics describing the data and specific examples of the gender pay gap. Additionally, we conduct a deep dive using multiple linear regression for some of our more advanced analyses.
-
-* Findings and Conclusion
-
-It is clear from this data that there is a significant pay gap. However, even using this massive dataset, there is at least one more critical and yet undefined variable that must be added to model the pay gap. Without the column named "CompanyPercentSexist" in this dataset, we hypothesize that modeling this gap may never be possible.
-
-* Significance of Findings
-
-If nothing else, we need to delve further into this issue. We would like to attempt to collect some funding and perform additional modeling. Our initial ideas involve presenting some additional questions to Stack Overflow, particularly related to geography and industry. While we might not be able to find "CompanyPercentSexist," at least if we can narrow down industry and region, we can report key information to local politicians and the media.
-
-<!-- 
-By using a data set that includes responses from a range of tech professionals, our goal is to offer a detailed insight into the factors that contribute to the identified trends in the gender pay gap. 
-The results of this study could guide evidence-based efforts to promote inclusivity and equality, ultimately benefiting both the technology sector and society as a whole. -->
+Upon completing this study, we recommend persevering and potentially seeking funding for further research and modeling. Our first immediate suggested action would be proposing additional questions to Stack Overflow, particularly those related to geography and industry. While we might not be able to find "CompanyPercentSexist," narrowing our focus to industry and region could enable us to provide essential information to local politicians and the media.
 
 ## Introduction
 
 The gender pay gap within the US tech sector has long been a subject of concern, reflecting broader societal issues and potential barriers to gender equity. 
+
 This research paper leverages a data set built From six years / 1.55GB of Stack Overflow [survey data](https://survey.stackoverflow.co) to examine the pay 
 gap across many variables. 
 
 Our aim is to answer the question, **Is there a significant difference in salary between males and females within the tech industry?**
 
-The dependent variable is *Annual Salary*. We will utilize multiple linear regression to first determine if we can reject the null hypothesis. The null hypothesis ($H_0$) is: **There is no significant difference in the mean annual salaries between male and females.** The alternative hypothesis ($H_1$) is: **There is a significant difference in the mean annual salaries between males and females.** Once we determine if we can reject the null hypothesis, we will determine which variables are statistically significant in predicting the response variable (Annual Salary).
+The dependent variable is *Annual Salary*. We will utilize simple linear regression to first determine if we can reject the null hypothesis. 
+
+The null hypothesis ($H_0$) is: **There is no significant difference in the mean annual salaries between male and females.** 
+
+The alternative hypothesis ($H_1$) is: **There is a significant difference in the mean annual salaries between males and females.** 
+
+Once we determine if we can reject the null hypothesis, we will determine which variables are statistically significant in predicting the response variable (Annual Salary) by creating a multiple linear regression model. 
 
 ## Data Overview
 
@@ -152,14 +141,14 @@ salByJobType <- wide_stack %>%
   ggplot(aes(x = reorder(DevType, -AvgSalary), y = AvgSalary)) +
   geom_bar(stat = "identity", position = "dodge") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggtitle("Top 20 Average Salaries in the U.S. by Job Type") +
+  ggtitle("Overview: Respondents by salary and job type") +
   labs(x = "Job Type", y = "Average Salary")
 
 respGender <- wide_stack %>%
   filter(Gender %in% c("Female", "Male")) %>%
   ggplot(aes(x = Year, fill = Gender)) +
   geom_bar(position = "dodge") +
-  labs(title = "Respondents by gender over years",
+  labs(title = "Overview: Yearly survey respondents by gender",
     x = "Year",
     y = "Number of Respondents",
     fill = "Gender") +
@@ -201,7 +190,7 @@ grid.arrange(corr_chart, ncol = 1)
 
 
 ### A quick look at gender discrepency
-As a final series of charts, and as we alluded to in the project proposal, it wasn't just one or two variables showing a pay gap, it was all of them. We thought we'd add some more  descriptive box plots to this presentation before we started deeper analysis.  
+As a final series of charts, and as we alluded to in the project proposal, the presence of a pay gap was not limited to just one or two variables; rather, it manifested across all of them. Before delving into a more thorough analysis, we decided to incorporate additional descriptive box plots into this presentation. 
 
 ```{r message=FALSE, echo=FALSE}
 boxplot_base <- wide_stack %>% 
@@ -305,36 +294,10 @@ grid.arrange(minority_plot, non_minority_plot, lgbqt_plot , straight_plot, ncol 
 
 
 ## Data analysis
-Converting female and male salary distributions to z-scores to compare.
-```{r, warning = FALSE, message = FALSE, echo = FALSE}
-# calculate z-score
-wide_stack <- wide_stack %>%
-  group_by(Gender) %>%
-  mutate(
-    z_score = (AnnualSalary - mean(AnnualSalary)) / sd(AnnualSalary)
-  ) %>%
-  ungroup() 
 
-wide_stack %>%
-  ggplot(aes(x = z_score, y = as.factor(Gender), fill = Gender)) +
-    geom_boxplot() +
-    scale_y_discrete(labels = c("Female", "Male")) +
-    labs(
-      title = "Z-Score Distribution of Salaries by Gender",
-      x = "Z-Score",
-      y = "Gender"
-    ) +
-    theme(
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      plot.title = element_text(face = "bold", hjust = 0.5),
-      legend.position = "none"
-    ) +
-    coord_flip()
-```
+### Simple Linear Regression
 
----
-
-We will create a multiple linear regression model.
+To determine if we can reject the null hypothesis, we will begin with constructing a simple linear regression model with annual salary as the dependent variable and gender as the independent variable.
 
 ```{r}
 wide_stack$Gender <- relevel(wide_stack$Gender, ref = "Male")
@@ -342,58 +305,39 @@ m_salary_gender <- lm(AnnualSalary ~ Gender, data = wide_stack)
 summary(m_salary_gender)
 ```
 
-From the above, we see that the p-value is 0.000000000000022%. Using a 95% confidence interval, having a p-value of less than 5% means that we can reject the null hypothesis. We can see that the adjusted $\R^2$ value is very small (0.6364%), which means that the model does not explain much of the variability of the dependent variable. The coefficient -14,112.9 means that, on average and after accounting for other factors in the model, being female is associated with a decrease of $14,112.9 in annual salary compared to males.
+From the above, we see that the p-value is 0.000000000000022%. Using a 95% confidence interval, having a p-value of less than 5% means that we can reject the null hypothesis. We can see that the adjusted $R^2$ value is very small (0.6364%), which means that the model does not explain much of the variability of the dependent variable. The coefficient -14,112.9 means that, on average and after accounting for other factors in the model, being female is associated with a decrease of $14,112.9 in annual salary compared to males.
 
 ---
 
-So, we will first add in all of the variables in our study to determine which are good predictors of the variance. We will also include the interaction between each variable and Gender, denoted by "Gender * Variable". 
+### Multiple Linear Regression
+
+Now that we have determined that we can reject the null hypothesis, we will construct a multiple linear regression model which includes all of the variables in our study to determine which are good predictors of the variance in annual salary. The inclusion of interaction terms, represented as "Gender * Variable," allows us to examine the impact of each variable in relation to gender.
 
 ```{r}
 wide_stack$EdLevel<- relevel(wide_stack$EdLevel, ref = "Something Else")
 
-m_salary <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg 
-+ Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:julia + Gender:microsoftazure + Gender:aws 
-+ Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2 + Gender:mongodb, data = wide_stack)
+m_salary <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped +
+   Gender:EdLevel + Gender:OrgSizeAvg +
+   Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:julia +
+   Gender:microsoftazure + Gender:aws + Gender:mariadb + Gender:mongodb +
+   Gender:linux + Gender:windows + Gender:mysql + Gender:oracle + Gender:ibmdb2 + 
+   Gender:c + Gender:googlecloud + Gender:ibmcloudorwatson + Gender:java + 
+   Gender:javascript + Gender:kubernetes + + Gender:microsoftsqlserver + Gender:php +
+   Gender:postgresql + Gender:redis + Gender:ruby + Gender:rust + Gender:sqlite +
+   Gender:swift, data = wide_stack)
 
 summary(m_salary)
 ```
 
----
-
-From the previous summary, we can see that there are a few variables that have a very low p-value, which means that they are not statistically 
-significant in the model. These variables are:
-
-- EdLevel: Something Else
-- mongodb
-- julia
-
-The $R^2$ value is 26.14%, which means that approximately 26.14% of the variability in the dependent variable (AnnualSalary) can be explained by the independent variables included in the model. The remaining 73.86% of the variability is unaccounted for by the model. The p-value is 0.000000000000022%,  which suggests that there is strong evidence that at least one of the predictors in the model has a non-zero effect, and the overall model is statistically significant. Hence, we can reject the null hypothesis (There is no significant difference in the mean annual salaries between male and females).
-
-We will re-run the model with the above variables removed to see if this improves the $R^2$. 
-
----
-
-```{r}
-wide_stack_filtered <- wide_stack %>%
-  filter(!EdLevel %in% c("Something Else"))
-
-m_salary_filter <- lm(AnnualSalary ~ Gender + Gender:AgeAvg + Gender:ethnicity_grouped + Gender:sexuality_grouped + Gender:EdLevel + Gender:OrgSizeAvg + 
-Gender:YearsCodeProAvg + Gender:Year + Gender:python + Gender:r + Gender:scala + Gender:microsoftazure + Gender:aws + Gender:linux + Gender:windows + 
-Gender:mysql + Gender:oracle + Gender:ibmdb2, data = wide_stack_filtered)
-
-summary(m_salary_filter)
-```
-
----
-
-From the previous summary, we can see that the $R^2$ value has improved to 26.16%. This is not much of an improvement, but after experimenting with removing other variables, it is the highest value attainable. This means that approximately 26.16% of the variability in the dependent variable (AnnualSalary) can be explained by the remaining independent variables included in the model. The p-value is still very small, which means that we can still reject the null hypothesis. 
+The $R^2$ value is 30.25%, which means that approximately 30.25% of the variability in the dependent variable (AnnualSalary) can be explained by the independent variables included in the model. The remaining 69.75% of the variability is unaccounted for by the model. The p-value is 0.000000000000022%,  which suggests that there is strong evidence that at least one of the predictors in the model has a non-zero effect, and the overall model is statistically significant. Hence, we can reject the null hypothesis (There is no significant difference in the mean annual salaries between male and females).
 
 ## Assuring compliance with model conditions
 
-The four required conditions of multiple linear regression are linearity, normality, constant variability and independence of residuals. After reviewing all four conditions below, we believe a multiple linear regression is valid to use. 
+Having examined the four essential conditions for multiple linear regression, including linearity, normality, constant variability, and independence of residuals, we conclude that the utilization of multiple linear regression is deemed valid.
 
 ### Linearity
-We can assume linearity as we can see ther is no obvious trend in the distrobution.
+
+We can assume linearity, as there is no apparent trend observed in the distribution.
 
 ```{r, message = FALSE, warning = FALSE}
 ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
@@ -410,7 +354,8 @@ ggplot(data = m_salary, aes(sample = .resid)) +
 ```
 
 ### Constant Variability
-Points are scattered with no apparent pattern around 0, and therefore we can assume constant variability.
+
+Points are scattered with no apparent pattern around 0, indicating that we can assume constant variability.
 
 ```{r}
 ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
@@ -421,25 +366,30 @@ ggplot(data = m_salary, aes(x = .fitted, y = .resid)) +
 
 ### Independence
 
-We assume independence. Each case represents an individual response, and responses even if done by the same people have a full year between them. 
+Given that each case represents an individual response, we can reasonably assume independence. Even though the same individuals may submit survey responses over multiple years, we can expect their salaries to change within a year due to factors such as bonuses, promotions, and annual salary increases.
 
 ## Conclusion
 
 ### Findings
-After having whittled down gigabytes worth of data across 557 raw variables that we expanded into over 750 total variables, two things are clear to us. 
+Having analyzing gigabytes of data spanning 557 raw variables, which were expanded to over 750 variables, the following conclusions have become evident:
 
-1. There is at least one more unkwon variable that plays a massive factor in describing the gap between gender pay in the technology jobs
-2. That variable is not incldued in this study
+1. The linear model that we've developed only accounts for 30.25% of the variability of the dependent variable
+2. There is another variable, or variables, not previously considered that plays a pivotal role in describing the wage gap within the technology industry
 
-### Reccomendations
+In conclusion, there is an obvious gap in salaries between males and females shown in our regression model. 
 
-We suspect further analyzing factors from this study will continue to be inconclusive, but our primary reccomendation is to keep this study going, to find funding, or do whatever it takes to persevere. We do believe there are three directions that would all be good to go down next. All thre eare implausable, but if we coudl dig into them, we are convident they would help us find influential pay gap variables. 
+For example, the coefficients for GenderFemale:awsyes and GenderMale:awsyes represent the estimated change in Annual Salary associated with a one-unit change in the variable "awsyes", while holding all other variables constant. The coefficients for GenderFemale:awsyes and GenderMale:awsyes are 9,247 and 10,137, respectively. Both coefficients are positive, which means that, on average, both men and women who use AWS tend to have higher salaries compared to those who do not use AWS. However, the magnitude of the coefficient for GenderMale:awsyes is higher than that for GenderFemale:aws yes. This suggests that, on average, men who use AWS have a higher estimated increase in Annual salary compared to women who use AWS.
 
-1. **Study salaries by gender and location**  Our study doens't take into account state and county. Perhaps this is a tiny town versus big city only problem. Or perhaps the pay gap is only in Portland Oregon. Our data does not provide that dimension. 
+This trend is shown across several variables in our model. In conjunction with the results from our simple linear regression model, we can conclude that our model supports our alternative hypothesis that there is a significant difference in the mean annual salaries between males and females. Importantly, this difference in mean annual salaries is not confined to a single variable but holds true across multiple variables considered in the study.
 
-2. **Study company salaires by gender** Obviously, not all companies big or small have as significant of issues with pay, but certain companies are known to have a notoriusly masive pay gap. We could start with Oracle.  
+### Recommendations
+We anticipate that delving deeper into the factors examined in this study may yield inconclusive results. However, our main suggestion is to persist with this research, seek funding, or take any necessary measures to ensure its continuation. We have identified three potential directions to pursue next. Nonetheless, we are confident that exploring these avenues would likely uncover influential variables contributing to the pay gap.
 
-3. **Study entire industires by gender and salary** There are software developers and project managers that do exactly the same thing in non profits, and in media. Perhaps the industry itself plays one of the biggest roles in the pay gap. 
+1. **Study salaries by gender and location**  Our study lacks consideration for state and county variables. It's plausible that the wage gap is specific to small towns versus big cities, or possibly confined to a particular location such as Portland, Oregon. The current data does not incorporate this geographical dimension.
+
+2. **Study company salaries by gender** Certainly, not every company, regardless of its size, faces substantial issues with pay disparities. However, specific companies are notorious for having a significantly massive wage gap. Examining the salaries of individual companies and discerning the wage gap within each could be a highly impactful analysis.
+
+3. **Study entire industries by gender and salary** Software developers and project managers performing identical tasks are found in both non-profit and media sectors. It's possible that the industry itself plays a pivotal role in influencing the wage gap.
 
 
 
