@@ -15,13 +15,16 @@ do a bunch of stuff, two data sets, blah
 ```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, output = FALSE}
 library(tidyverse)
 library(scales)
+library(dplyr)
+library(gt)
 joined_pluto_path <- "./nogit_cache/_joined_pluto.csv"
 if (!file.exists(joined_pluto_path)) {
   source('./nycfun.r')
 }
 
 ## load the cache
-joined_pluto <- read_csv(joined_pluto_path)
+joined_pluto <- read_csv(joined_pluto_path) %>% 
+  mutate(pfirm15_flag = coalesce(pfirm15_flag, 0))
 
 ```
 
@@ -67,4 +70,85 @@ Aliquam accumsan tristique varius. Donec vitae nibh at est convallis aliquet eu 
 
 ## more otehr stuff
 
+## Kristin's Block - information that would be useful to underwriters/insurance professionals
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE}
+# property value per flood zone
+joined_pluto_sorted %>%
+  group_by(pfirm15_flag) %>%
+  summarize(total_assesstot = sum(assesstot, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_bar(aes(x = factor(pfirm15_flag), y = total_assesstot, fill = factor(pfirm15_flag)), stat = "identity", position = "dodge") +
+  geom_text(aes(x = factor(pfirm15_flag), y = total_assesstot, label = comma_format()(total_assesstot)),
+            position = position_dodge(width = 0.9),
+            vjust = -0.5, size = 3) +
+  labs(title = "Total Values by Flood Risk Type",
+       x = "",
+       y = "Total Values") +
+  scale_x_discrete(labels = c("0" = "No Flood Risk", "1" = "1% Annual Chance Flood Plain")) +
+  scale_y_continuous(labels = comma_format(), breaks = seq(0, 2000000000, by = 250000000)) +
+  scale_fill_manual(values = c("0" = "lightgreen", "1" = "indianred"), 
+                    name = "Flood Zone Risk", labels = c("No Flood Risk", "1% Annual Chance Flood Plain")) +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.title = element_text(face = "bold", hjust = 0.5))
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE}
+# provide risk score
+# not in flood zone and doesn't have basement = 0
+# not in flood zone but has basement = 1
+# in a flood zone = 2
+# in a flood zone & has basement  = 3
+risky_prop_flood <- joined_pluto_sorted %>%
+  mutate(
+    riskscore = case_when(
+      pfirm15_flag == 1 & (!is.na(bsmtcode) | bsmtcode != 0) ~ 3,
+      pfirm15_flag == 1 & (is.na(bsmtcode) | bsmtcode == 0) ~ 2,
+      pfirm15_flag == 0 & (!is.na(bsmtcode) | bsmtcode != 0) ~ 1,
+      pfirm15_flag == 0 & (is.na(bsmtcode) | bsmtcode == 0) ~ 0,
+      TRUE ~ NA_real_
+    )
+  ) %>%
+  select(location_name, street_number, city, state, zip, borough.x, riskscore, assesstot)
+
+
+ggplot(data = risky_prop_flood) +
+  geom_bar(aes(x = riskscore, fill = as.factor(riskscore))) +
+  labs(
+    title = "Distribution of Risk Scores",
+    x = "Risk Score",
+    y = "Count"
+  ) +
+  scale_y_continuous(breaks = seq(0, max(table(risky_prop_flood$riskscore)), by = 5)) +
+  scale_fill_manual(values = c("darkolivegreen2", "gold1", "sienna1", "firebrick"),
+                    breaks = c(0, 1, 2, 3),
+                    labels = c("0", "1", "2", "3"),
+                    name = "Risk Score") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+
+```
+
+
+```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE}
+summary_data <- risky_prop_flood %>%
+  group_by(riskscore) %>%
+  summarize(total_assesstot = sum(assesstot, na.rm = TRUE)) %>%
+  rename("New Name for Total Assesstot" = total_assesstot,
+         "Risk Score" = riskscore)
+
+summary_data %>%
+  gt() %>%
+  cols_label("Risk Score" = "Risk Score",
+             "New Name for Total Assesstot" = "Values") %>%
+  tab_header(
+    title = "Summary of Values by Risk Score"
+  ) %>%
+  fmt_currency(columns = c("New Name for Total Assesstot"), currency = "USD")
+```
+
+
 ## conclusions
+
