@@ -59,7 +59,7 @@ key <- readLines("nyc_key")
 
 dir.create("nogit_cache", showWarnings = FALSE)
 
-addr <- read_csv('nyc_cuny.csv') %>%
+addr <- read_csv('nyc_cuny.csv', show_col_types = FALSE) %>%
   mutate(street_number = gsub(" St$", " Street", street_number)) %>%
   mutate(street_number = gsub(" Ave$", " Avenue", street_number)) %>%
   mutate(AddressNo = sapply(street_number, extract_street_number),
