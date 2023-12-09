@@ -28,7 +28,7 @@ joined_pluto <- read_csv(joined_pluto_path) %>%
 
 ```
 
-```{r}
+```{r fig.height=6}
 joined_pluto_sorted <- joined_pluto %>%
   arrange(desc(property_value))
 
@@ -39,36 +39,7 @@ ggplot(joined_pluto_sorted, aes(x = reorder(location_name, property_value), y = 
   labs(x = "Location Name", y = "Property Value", title = "Property Value by Location")
 ```
 
-
-## abstract
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi gravida tempus mattis. Quisque nisl purus, aliquet at aliquam sit amet, scelerisque eu sem. Maecenas rhoncus risus nisi, a lobortis arcu cursus sit amet. Pellentesque rhoncus rhoncus erat, quis tristique dolor lacinia et. Aliquam ornare fringilla dui quis viverra. Nam vitae augue arcu. Nunc aliquam nisl ac quam consectetur, condimentum maximus sem condimentum. Nullam odio mi, ullamcorper eu leo id, iaculis vestibulum tellus. Ut molestie metus risus. Morbi vel nisl fermentum, tincidunt massa id, auctor mi. Mauris quis tempor sem. Ut ullamcorper enim a turpis semper congue.
-
-Nulla pellentesque placerat tellus sed congue. Etiam dictum nisl nisl, non facilisis velit sollicitudin eu. Suspendisse venenatis est at erat rutrum, a tincidunt ipsum auctor. Phasellus non euismod justo. Suspendisse potenti. Sed lacinia elementum dui eget bibendum. Donec dapibus ut dolor sagittis consectetur. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer maximus nulla tortor, sit amet finibus eros aliquet id. Nulla posuere diam a lobortis aliquam. Ut ante ligula, maximus quis efficitur bibendum, sollicitudin eu lorem.
-
-Nullam cursus felis a vestibulum gravida. Duis eget libero aliquet lacus consectetur egestas. Pellentesque ut tortor lacus. Fusce pharetra dolor vel quam elementum bibendum. Sed tincidunt arcu dui, vitae dignissim turpis commodo ut. Maecenas id felis ut nisi iaculis hendrerit vel eu nulla. Cras vitae eleifend diam.
-
-Proin vitae risus felis. Quisque ac tellus nec lacus fringilla dictum. Donec ut porttitor magna, in efficitur velit. Quisque eros lorem, hendrerit at maximus sit amet, tincidunt nec ipsum. Vivamus vulputate tortor dolor. Nam pretium, metus id convallis sollicitudin, orci metus aliquet nisi, nec tincidunt dui justo ut dolor. Aenean orci nunc, pharetra nec libero vitae, gravida pellentesque lorem.
-
-Nulla maximus metus eget lacinia dignissim. Phasellus non dolor sit amet nibh egestas laoreet non quis massa. Vestibulum eu erat erat. Aliquam egestas, eros a accumsan tempor, justo justo varius nisl, non porttitor purus magna id libero. Vestibulum aliquet molestie ante, at iaculis lectus ultricies eget. Nullam lacinia, mauris eu vehicula accumsan, nibh sapien gravida odio, eu posuere orci sapien id odio. Phasellus tempus volutpat erat sit amet ultrices. Nulla lacinia eleifend sem, at eleifend tellus aliquet sed. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nunc felis risus, fermentum vel leo at, molestie finibus eros. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Ut tempor sodales lacus nec consequat.
-
-Aliquam accumsan tristique varius. Donec vitae nibh at est convallis aliquet eu id eros. Fusce id ultrices felis. Cras egestas dui iaculis sem gravida porttitor. Proin fermentum accumsan dolor, nec pretium nisi consequat eu. Fusce dignissim volutpat ipsum. Nulla quis tempor orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti. Aliquam mollis enim arcu, ac aliquet orci vulputate vel. Vivamus eget ligula interdum, ullamcorper libero iaculis, lobortis velit. Donec pellentesque nibh ut nisi commodo maximus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam ut dui metus. Duis nec dapibus leo. Duis semper.
-
-## gone drinkin!
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi gravida tempus mattis. Quisque nisl purus, aliquet at aliquam sit amet, scelerisque eu sem. Maecenas rhoncus risus nisi, a lobortis arcu cursus sit amet. Pellentesque rhoncus rhoncus erat, quis tristique dolor lacinia et. Aliquam ornare fringilla dui quis viverra. Nam vitae augue arcu. Nunc aliquam nisl ac quam consectetur, condimentum maximus sem condimentum. Nullam odio mi, ullamcorper eu leo id, iaculis vestibulum tellus. Ut molestie metus risus. Morbi vel nisl fermentum, tincidunt massa id, auctor mi. Mauris quis tempor sem. Ut ullamcorper enim a turpis semper congue.
-
-Nulla pellentesque placerat tellus sed congue. Etiam dictum nisl nisl, non facilisis velit sollicitudin eu. Suspendisse venenatis est at erat rutrum, a tincidunt ipsum auctor. Phasellus non euismod justo. Suspendisse potenti. Sed lacinia elementum dui eget bibendum. Donec dapibus ut dolor sagittis consectetur. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Integer maximus nulla tortor, sit amet finibus eros aliquet id. Nulla posuere diam a lobortis aliquam. Ut ante ligula, maximus quis efficitur bibendum, sollicitudin eu lorem.
-
-Nullam cursus felis a vestibulum gravida. Duis eget libero aliquet lacus consectetur egestas. Pellentesque ut tortor lacus. Fusce pharetra dolor vel quam elementum bibendum. Sed tincidunt arcu dui, vitae dignissim turpis commodo ut. Maecenas id felis ut nisi iaculis hendrerit vel eu nulla. Cras vitae eleifend diam.
-
-Proin vitae risus felis. Quisque ac tellus nec lacus fringilla dictum. Donec ut porttitor magna, in efficitur velit. Quisque eros lorem, hendrerit at maximus sit amet, tincidunt nec ipsum. Vivamus vulputate tortor dolor. Nam pretium, metus id convallis sollicitudin, orci metus aliquet nisi, nec tincidunt dui justo ut dolor. Aenean orci nunc, pharetra nec libero vitae, gravida pellentesque lorem.
-
-Nulla maximus metus eget lacinia dignissim. Phasellus non dolor sit amet nibh egestas laoreet non quis massa. Vestibulum eu erat erat. Aliquam egestas, eros a accumsan tempor, justo justo varius nisl, non porttitor purus magna id libero. Vestibulum aliquet molestie ante, at iaculis lectus ultricies eget. Nullam lacinia, mauris eu vehicula accumsan, nibh sapien gravida odio, eu posuere orci sapien id odio. Phasellus tempus volutpat erat sit amet ultrices. Nulla lacinia eleifend sem, at eleifend tellus aliquet sed. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Nunc felis risus, fermentum vel leo at, molestie finibus eros. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Ut tempor sodales lacus nec consequat.
-
-Aliquam accumsan tristique varius. Donec vitae nibh at est convallis aliquet eu id eros. Fusce id ultrices felis. Cras egestas dui iaculis sem gravida porttitor. Proin fermentum accumsan dolor, nec pretium nisi consequat eu. Fusce dignissim volutpat ipsum. Nulla quis tempor orci. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti. Aliquam mollis enim arcu, ac aliquet orci vulputate vel. Vivamus eget ligula interdum, ullamcorper libero iaculis, lobortis velit. Donec pellentesque nibh ut nisi commodo maximus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Etiam ut dui metus. Duis nec dapibus leo. Duis semper.
-
-## more otehr stuff
+## Some Maps
 
 ## Kristin's Block - information that would be useful to underwriters/insurance professionals
 
