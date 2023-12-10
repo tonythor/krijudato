@@ -47,6 +47,9 @@ To progress from POC to alpha release, we need to add:
 
 Once the foundational elements are operational, we plan to incorporate additional datasets, such as crime statistics, school literacy rates, and building and fire code violations.
 
+
+## Overview: CUNY Property Value
+
 ```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, output = FALSE}
 library(tidyverse)
 library(scales)
@@ -59,16 +62,19 @@ library(sf)
 library(gt)
 library(readr)
 library(data.table)
+
 joined_pluto_path <- "./nogit_cache/_joined_pluto.csv"
+pluto_path <- "./nogit_cache/_pluto_23v3.csv"
+
 if (!file.exists(joined_pluto_path)) {
   source('./nycfun.r')
 }
 
-url <- "https://tonyfraser-data.s3.amazonaws.com/nyc-addresses/nyc_pluto_23v3_csv/pluto_23v3.csv"
-pluto_path <- "./nogit_cache/_pluto_23v3.csv"
-if (!file.exists(pluto_path)) {
-  download.file(url, pluto_path, mode = "wb")
-}
+# url <- "https://tonyfraser-data.s3.amazonaws.com/nyc-addresses/nyc_pluto_23v3_csv/pluto_23v3.csv"
+
+# if (!file.exists(pluto_path)) {
+#   download.file(url, pluto_path, mode = "wb")
+# }
 
 ## load the cache
 joined_pluto <- read_csv(joined_pluto_path) %>% 
@@ -87,22 +93,37 @@ ggplot(joined_pluto_sorted, aes(x = reorder(location_name, property_value), y = 
   labs(x = "Location Name", y = "Property Value", title = "Property Value by Location")
 ```
 
-## Some Maps
+## Master Map
 
-```{r newchunk, warning = FALSE,  echo = FALSE}
+```{r mapcode, warning = FALSE,  echo = FALSE}
 pluto <- read_csv(pluto_path, show_col_types = FALSE) %>%
   mutate(flood_zone = ifelse(pfirm15_flag == 0 | is.na(pfirm15_flag), "Not in Flood Zone", "1% Annual Flood Plain"))
+
 dfbrklyn<-filter(pluto,borocode=='3', pfirm15_flag ==1)
 dfqueens<-filter(pluto,borocode=='4', pfirm15_flag ==1)
 dfbronx<-filter(pluto,borocode=='2', pfirm15_flag ==1)
 dfmanhattan<-filter(pluto,borocode=='1', pfirm15_flag ==1)
 dfstaten<-filter(pluto,borocode=='5', pfirm15_flag ==1)
 
-df_sample_Brooklyn<-sample_n(dfbrklyn, length(dfbrklyn$borough))
-df_sample_Queens<-sample_n(dfqueens, length(dfqueens$borough))
-df_sample_Bronx<-sample_n(dfbronx, length(dfbronx$borough))
-df_sample_manhattan<-sample_n(dfmanhattan, length(dfmanhattan$borough))
-df_sample_staten<-sample_n(dfstaten, length(dfstaten$borough))
+# df_sample_Brooklyn<-sample_n(dfbrklyn, length(dfbrklyn$borough))
+# df_sample_Queens<-sample_n(dfqueens, length(dfqueens$borough))
+# df_sample_Bronx<-sample_n(dfbronx, length(dfbronx$borough))
+# df_sample_manhattan<-sample_n(dfmanhattan, length(dfmanhattan$borough))
+# df_sample_staten<-sample_n(dfstaten, length(dfstaten$borough))
+
+
+# df_sample_Brooklyn<-sample_n(dfbrklyn,2192)
+# df_sample_Queens<-sample_n(dfqueens,2155)
+# df_sample_Bronx<-sample_n(dfbronx,1399)
+# df_sample_manhattan<-sample_n(dfmanhattan,1283)
+# df_sample_staten<-sample_n(dfstaten,2040)
+
+df_sample_Brooklyn<-sample_n(dfbrklyn,100)
+df_sample_Queens<-sample_n(dfqueens,100)
+df_sample_Bronx<-sample_n(dfbronx,100)
+df_sample_manhattan<-sample_n(dfmanhattan,100)
+df_sample_staten<-sample_n(dfstaten,100)
+
 
 df_sample_Brooklyn_flood<- df_sample_Brooklyn %>%
   mutate(Brooklyn_Data= paste("<b>Building Area: <b>", bldgarea, "<br>",
@@ -195,7 +216,7 @@ colleges <- mapview(sample_colleges, crs = 4269, xcol = "longitude", ycol = "lat
 # This file comes from this website: https://data.cityofnewyork.us/Environment/Floodplain/g62a-qs52
 # To get to the file, go to Export, Download, Download a non-geospatial file type, CSV
 # Save to your default directory
-polygonFile <- read_csv("polygonData.csv", show_col_types = FALSE)
+polygonFile <- read_csv("polygonData", show_col_types = FALSE)
 
 polygonFile <- polygonFile |> filter(Shape_Area >= 1)
 
