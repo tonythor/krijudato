@@ -1,22 +1,27 @@
 ---
-title: "Lookin up stuff!"
+title: "Flood Risk in NYC: A Product for Insurance Professionals"
 author: "Team Krijudato (Kristin L, Julia F, David G, Tony F)"
-date: "7 Dec 2023"
+date: "December 10, 2023"
 format:
   html:
     theme: cosmo
     toc: true
     number_sections: true
 ---
-## assignment
+
+## Introduction
+
 do a bunch of stuff, two data sets, blah
 
 ## load stuff
+
 ```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, output = FALSE}
 library(tidyverse)
 library(scales)
 library(dplyr)
 library(gt)
+library(leaflet)
+library(htmltools)
 joined_pluto_path <- "./nogit_cache/_joined_pluto.csv"
 if (!file.exists(joined_pluto_path)) {
   source('./nycfun.r')
@@ -41,9 +46,76 @@ ggplot(joined_pluto_sorted, aes(x = reorder(location_name, property_value), y = 
 
 ## Some Maps
 
-## Kristin's Block - information that would be useful to underwriters/insurance professionals
+## The Product Output
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE}
+According to [Swiss Re](https://www.swissre.com/risk-knowledge/risk-perspectives-blog/challenge-of-understanding-secondary-perils.html), flooding is classified as a secondary peril, posing greater modeling challenges compared to hurricanes and earthquakes. The unpredictability of flood occurrences, both in terms of timing and location, adds to the complexity. The limited adoption of flood catastrophe models by insurance professionals can be attributed to these difficulties. Current flood catastrophe models do not have a high degree of confidence, as U.S. flood models are still in their infancy. 
+
+The product we've created proves valuable for insurance professionals by offering insights into the locations outlined in a schedule of values. While it doesn't fall under the category of a catastrophe model, it furnishes valuable information. This information aids insurance professionals, including underwriters and actuaries, in making well-informed decisions regarding the provision of flood insurance for individuals, groups, companies, or government entities. 
+
+In our demonstration, we are using the schedule of values for the City University of New York (CUNY). 
+
+### Map of Locations
+
+```{r, warning = FALSE, message = FALSE, show = FALSE, echo = FALSE}
+locations <- data.frame(
+  location_name = joined_pluto_sorted$location_name,
+  latitude = joined_pluto_sorted$latitude,
+  longitude = joined_pluto_sorted$longitude,
+  borough = joined_pluto_sorted$borough.y,
+  assesstot = joined_pluto_sorted$assesstot,
+  pfirm15_flag = joined_pluto_sorted$pfirm15_flag,
+  bldgarea = joined_pluto_sorted$bldgarea,
+  lotarea = joined_pluto_sorted$lotarea,
+  unitstotal = joined_pluto_sorted$unitstotal,
+  numbldgs = joined_pluto_sorted$numbldgs,
+  numfloors = joined_pluto_sorted$numfloors,
+  yearbuilt = joined_pluto_sorted$yearbuilt,
+  out_condo_flag = joined_pluto_sorted$out_condo_flag
+)
+
+popup_content <- function(location_name, borough, assesstot, bldgarea, lotarea, unitstotal, numbldgs, numfloors, yearbuilt, pfirm15_flag, out_condo_flag) {
+  flood_zone <- ifelse(pfirm15_flag == 0, "Not in Flood Zone", "1% Annual Flood Plain")
+  paste(
+    "<b>Location:</b> ", location_name, "<br>",
+    "<b>Borough:</b> ", borough, "<br>",
+    "<b>Property Value:</b> ", scales::dollar(assesstot), "<br>",
+    "<b>Building Area:</b> ", scales::comma(bldgarea), "<br>",
+    "<b>Lot Area:</b> ", scales::comma(lotarea), "<br>",
+    "<b>Total Units:</b> ", unitstotal, "<br>",
+    "<b>Number of Buildings:</b> ", numbldgs, "<br>",
+    "<b>Number of Floors:</b> ", numfloors, "<br>",
+    "<b>Year Built:</b> ", yearbuilt, "<br>",
+    "<b>Flood Zone:</b> ", flood_zone, "<br>",
+    "<b>Type:</b> ", out_condo_flag
+  )
+}
+
+loc_map <- leaflet(locations) %>%
+  addTiles() %>%
+  addMarkers(
+    ~longitude, ~latitude,
+    popup = popup_content(
+      joined_pluto_sorted$location_name,
+      joined_pluto_sorted$borough.y,
+      joined_pluto_sorted$assesstot,
+      joined_pluto_sorted$bldgarea,
+      joined_pluto_sorted$lotarea,
+      joined_pluto_sorted$unitstotal,
+      joined_pluto_sorted$numbldgs,
+      joined_pluto_sorted$numfloors,
+      joined_pluto_sorted$yearbuilt,
+      joined_pluto_sorted$pfirm15_flag,
+      joined_pluto_sorted$out_condo_flag
+    ),
+    labelOptions = labelOptions(noHide = TRUE, textOnly = TRUE)  
+  )
+
+loc_map
+```
+
+### Property Value by Flood Zone
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
 # property value per flood zone
 joined_pluto_sorted %>%
   group_by(pfirm15_flag) %>%
@@ -65,7 +137,16 @@ joined_pluto_sorted %>%
         legend.title = element_text(face = "bold", hjust = 0.5))
 ```
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE}
+### Risk Scoring
+
+Risk scores can prove to be a useful tool for underwriters to determine the complexity of the flood risk for the schedule. We've developed a risk scoring system that is assigned as follows:
+
+- Properties *not* in a flood zone and *without* a basement receive a risk score of **0**.
+- Properties *not* in a flood zone but *with* a basement are assigned a risk score of **1**.
+- Properties *in* a flood zone and *without* a basement are given a risk score of **2**.
+- Properties *in* a flood zone and *with* a basement receive a risk score of **3**.
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
 # provide risk score
 # not in flood zone and doesn't have basement = 0
 # not in flood zone but has basement = 1
@@ -102,8 +183,9 @@ ggplot(data = risky_prop_flood) +
 
 ```
 
+### Summary of Values by Risk Score
 
-```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE}
+```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
 summary_data <- risky_prop_flood %>%
   group_by(riskscore) %>%
   summarize(total_assesstot = sum(assesstot, na.rm = TRUE)) %>%
@@ -112,14 +194,19 @@ summary_data <- risky_prop_flood %>%
 
 summary_data %>%
   gt() %>%
-  cols_label("Risk Score" = "Risk Score",
-             "New Name for Total Assesstot" = "Values") %>%
+  cols_label("Risk Score" = md("**Risk Score**"),
+             "New Name for Total Assesstot" = md("**Values**")) %>%
   tab_header(
-    title = "Summary of Values by Risk Score"
+    title = md("**Summary of Values by Risk Score**")
   ) %>%
   fmt_currency(columns = c("New Name for Total Assesstot"), currency = "USD")
 ```
 
 
-## conclusions
+## Conclusion
 
+## Future Improvements
+
+Improving this product in the future may entail incorporating data at the national level and potentially expanding it globally. However, challenges arise when applying it nationally and globally due to varying levels of detail in flood information from different countries and regions. 
+
+Another improvement would be to add another data source that provides building construction. The type of construction can significantly impact the extent of losses in the event of a flood. Assessing the materials and design of structures would help insurance professionals estimate potential damage and calculate appropriate coverage.
