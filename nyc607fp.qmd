@@ -201,7 +201,149 @@ summary_data %>%
   ) %>%
   fmt_currency(columns = c("New Name for Total Assesstot"), currency = "USD")
 ```
+## Map of Flood Zones in NYC
 
+```{r flood-map, message = FALSE, fig.align = "center"}
+url <- "https://tonyfraser-data.s3.amazonaws.com/nyc-addresses/nyc_pluto_23v3_csv/pluto_23v3.csv"
+pluto_path <- "_pluto_23v3.csv"
+if (!file.exists(pluto_path)) {
+  download.file(url, pluto_path, mode = "wb")
+}
+
+pluto <- read_csv(pluto_path)
+dfbrklyn<-filter(pluto,borocode=='3', pfirm15_flag=='1')
+dfqueens<-filter(pluto,borocode=='4', pfirm15_flag=='1')
+dfbronx<-filter(pluto,borocode=='2', pfirm15_flag=='1')
+dfmanhattan<-filter(pluto,borocode=='1', pfirm15_flag=='1')
+dfstaten<-filter(pluto,borocode=='5', pfirm15_flag=='1')
+
+df_sample_Brooklyn<-sample_n(dfbrklyn,2192)
+df_sample_Queens<-sample_n(dfqueens,2155)
+df_sample_Bronx<-sample_n(dfbronx,1399)
+df_sample_manhattan<-sample_n(dfmanhattan,1283)
+df_sample_staten<-sample_n(dfstaten,2040)
+
+df_sample_Brooklyn_flood<- df_sample_Brooklyn %>%
+  mutate(Brooklyn_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Kings County"))
+
+df_sample_Queens_flood<- df_sample_Queens %>%
+  mutate(Queens_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Queens County"))
+
+df_sample_Bronx_flood<- df_sample_Bronx %>%
+  mutate(Bronx_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Bronx County"))
+
+df_sample_manhattan_flood<- df_sample_manhattan %>%
+  mutate(Manhattan_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("New York County"))
+
+df_sample_staten_flood<- df_sample_staten %>%
+  mutate(Staten_Island_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Richmond County"))
+
+sample_colleges <- joined_pluto %>%
+  mutate(colleges_data = paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))
+
+m_df_sample_staten_flood<-mapview(df_sample_staten_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Staten_Island_Data", grid = FALSE, layer.name = "Richmond County", col.regions = "red")
+
+m_df_sample_manhattan_flood<-mapview(df_sample_manhattan_flood,crs = 4269,  xcol = "longitude", ycol = "latitude", zcol="County",popup="Manhattan_Data",legend = TRUE,  grid = FALSE, layer.name = "New York County", col.regions = "green")
+
+m_df_sample_Bronx_flood<-mapview(df_sample_Bronx_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Bronx_Data",grid = FALSE, layer.name = "Bronx County", col.regions = "blue" )
+
+m_df_sample_Queens_flood<-mapview(df_sample_Queens_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Queens_Data",grid = FALSE, layer.name = "Queens County", col.regions = "orange" )
+
+m_df_sample_Brooklyn_flood<-mapview(df_sample_Brooklyn_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Brooklyn_Data", grid = FALSE, layer.name = "Kings County", col.regions = "yellow")
+
+colleges <- mapview(sample_colleges, crs = 4269, xcol = "longitude", ycol= "latitude", zcol = "type", legend = TRUE, popup = "colleges_data", grid = FALSE, layer.name = "Colleges in NYC", col.regions = c("black", "gray", "white"))
+
+library(readr)
+polygonData <- read_csv("polygonData.csv")
+# The data in the file polygonData.csv was uploaded from this website: https://data.cityofnewyork.us/Environment/Floodplain/g62a-qs52
+# Then, click Export and download the CSV file under the section "Download a non-geospatial file type"
+# Save it to polygonData.csv and then use it for this code
+
+polygonData <- polygonData |> filter(Shape_Area >= 1)
+
+geometry1 <- strsplit(polygonData$the_geom, split = ",")
+geometry2a <- str_split(geometry1, ",")
+geometry3 <- lapply(geometry2a, as.data.frame)
+
+df2 <- c()
+
+for (i in 1:nrow(polygonData))
+{
+  df1 <- data.frame(XY = geometry3[[i]], num = rep(i, each = nrow(geometry3[[i]])))
+  df2 <- rbind(df1, df2)
+}
+
+df2$`X..i..` <- gsub('c\\(\\"MULTIPOLYGON \\(\\(\\(', "", df2$`X..i..`)
+df2$X..i.. <- gsub('\\)\\)\\)\\"\\)', '', df2$X..i..)
+df2$X..i.. <- gsub('\\"', '', df2$X..i..)
+df2$X..i.. <- gsub('\\\n', '', df2$X..i..)
+df2$X..i.. <- gsub(' 4', ' 44', df2$X..i..)
+df2$X..i.. <- gsub('\\(', '', df2$X..i..)
+df2$X..i.. <- gsub('\\)', '', df2$X..i..)
+
+df2[c('long', 'lat')] <- str_split_fixed(df2$X..i.., ' 4', 2)
+df2 <- df2[,-1]
+
+projcrs <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+myCoords <- st_as_sf(x = df2,
+                     coords = c("long", "lat"),
+                     crs = projcrs)
+
+polys <- st_sf(
+  aggregate(
+    myCoords$geometry,
+    list(testing$num),
+    function(g){
+       st_cast(st_combine(g),"POLYGON")
+    }
+   ))
+
+polygons1 <- mapview(polys)
+
+m_df_sample_Brooklyn_flood+m_df_sample_Queens_flood+m_df_sample_Bronx_flood+m_df_sample_manhattan_flood+m_df_sample_staten_flood + colleges + polygons1
+```
 
 ## Conclusion
 
