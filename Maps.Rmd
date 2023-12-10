@@ -1,0 +1,110 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+```{r Load libraries and datasets}
+library(tidyverse)
+library(dplyr)
+library(stringr)
+library(data.table)
+library(mapview)
+library(sf)
+library(gt)
+library(leaflet)
+
+```
+
+
+```{r}
+
+url <- "https://tonyfraser-data.s3.amazonaws.com/nyc-addresses/nyc_pluto_23v3_csv/pluto_23v3.csv"
+pluto_path <- "./nogit_cache/_pluto_23v3.csv"
+if (!file.exists(pluto_path)) {
+  download.file(url, pluto_path, mode = "wb")
+}
+pluto <- read_csv(pluto_path)
+dfbrklyn<-filter(pluto,borocode=='3', pfirm15_flag=='1')
+dfqueens<-filter(pluto,borocode=='4', pfirm15_flag=='1')
+dfbronx<-filter(pluto,borocode=='2', pfirm15_flag=='1')
+dfmanhattan<-filter(pluto,borocode=='1', pfirm15_flag=='1')
+dfstaten<-filter(pluto,borocode=='5', pfirm15_flag=='1')
+
+df_sample_Brooklyn<-sample_n(dfbrklyn,2192)
+df_sample_Queens<-sample_n(dfqueens,2155)
+df_sample_Bronx<-sample_n(dfbronx,1399)
+df_sample_manhattan<-sample_n(dfmanhattan,1283)
+df_sample_staten<-sample_n(dfstaten,2040)
+
+```
+```{r}
+df_sample_Brooklyn_flood<- df_sample_Brooklyn %>%
+  mutate(Brooklyn_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Kings County"))
+
+df_sample_Queens_flood<- df_sample_Queens %>%
+  mutate(Queens_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Queens County"))
+
+df_sample_Bronx_flood<- df_sample_Bronx %>%
+  mutate(Bronx_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Bronx County"))
+
+df_sample_manhattan_flood<- df_sample_manhattan %>%
+  mutate(Manhattan_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("New York County"))
+
+df_sample_staten_flood<- df_sample_staten %>%
+  mutate(Staten_Island_Data= paste("Building Area: ", bldgarea,
+  "Lot Area: ", lotarea,
+  "Total Number of Units: ", unitstotal,
+  "Number of Buildings: ", numbldgs,
+  "Number of Floors: ", numfloors,
+  "Assessed Total: ", assesstot,
+  "Year Built: ", yearbuilt,
+  "Location: ",address))%>%mutate(County=paste("Richmond County"))
+
+
+```
+```{r}
+m_df_sample_staten_flood<-mapview(df_sample_staten_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Staten_Island_Data", grid = FALSE )
+
+m_df_sample_manhattan_flood<-mapview(df_sample_manhattan_flood,crs = 4269,  xcol = "longitude", ycol = "latitude", zcol="County",popup="Manhattan_Data",legend = TRUE,  grid = FALSE )
+
+m_df_sample_Bronx_flood<-mapview(df_sample_Bronx_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Bronx_Data",grid = FALSE )
+
+m_df_sample_Queens_flood<-mapview(df_sample_Queens_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Queens_Data",grid = FALSE )
+
+m_df_sample_Brooklyn_flood<-mapview(df_sample_Brooklyn_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Brooklyn_Data", grid = FALSE)
+```
+
+```{r}
+m_df_sample_Brooklyn_flood+m_df_sample_Queens_flood+m_df_sample_Bronx_flood+m_df_sample_manhattan_flood+m_df_sample_staten_flood
+
+```
+
+```
