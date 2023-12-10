@@ -1,9 +1,17 @@
 ---
+title: ' Newn York City Flood Map Data'
+author: "Team Krijudato (Kristin L, Julia F, David G, Tony F)"
+date: "9 Dec 2023"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
-```{r Load libraries and datasets}
+```{r  setup,echo=TRUE, message=FALSE, warning=FALSE}
+
+options(warn = -1) 
+options(readr.show_types = FALSE)
+
+suppressMessages({
 library(tidyverse)
 library(dplyr)
 library(stringr)
@@ -12,11 +20,12 @@ library(mapview)
 library(sf)
 library(gt)
 library(leaflet)
+})
 
 ```
 
 
-```{r}
+```{r, grabbing and organizing data into Dataframes,  echo=TRUE, message=FALSE, warning=FALSE}
 
 url <- "https://tonyfraser-data.s3.amazonaws.com/nyc-addresses/nyc_pluto_23v3_csv/pluto_23v3.csv"
 pluto_path <- "./nogit_cache/_pluto_23v3.csv"
@@ -37,7 +46,7 @@ df_sample_manhattan<-sample_n(dfmanhattan,1283)
 df_sample_staten<-sample_n(dfstaten,2040)
 
 ```
-```{r}
+```{r  echo=TRUE, message=FALSE, warning=FALSE}
 df_sample_Brooklyn_flood<- df_sample_Brooklyn %>%
   mutate(Brooklyn_Data= paste("Building Area: ", bldgarea,
   "Lot Area: ", lotarea,
@@ -90,19 +99,19 @@ df_sample_staten_flood<- df_sample_staten %>%
 
 
 ```
-```{r}
-m_df_sample_staten_flood<-mapview(df_sample_staten_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Staten_Island_Data", grid = FALSE )
+```{r creating map data,  echo=TRUE, message=FALSE, warning=FALSE}
+m_df_sample_staten_flood<-mapview(df_sample_staten_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Staten_Island_Data", grid = FALSE, layer.name = "Richmond County", col.regions = "red" )
 
-m_df_sample_manhattan_flood<-mapview(df_sample_manhattan_flood,crs = 4269,  xcol = "longitude", ycol = "latitude", zcol="County",popup="Manhattan_Data",legend = TRUE,  grid = FALSE )
+m_df_sample_manhattan_flood<-mapview(df_sample_manhattan_flood,crs = 4269,  xcol = "longitude", ycol = "latitude", zcol="County",popup="Manhattan_Data",legend = TRUE,  grid = FALSE,layer.name = "New York County", col.regions = "green" )
 
-m_df_sample_Bronx_flood<-mapview(df_sample_Bronx_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Bronx_Data",grid = FALSE )
+m_df_sample_Bronx_flood<-mapview(df_sample_Bronx_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Bronx_Data",grid = FALSE,layer.name = "Bronx County", col.regions = "blue" )
 
-m_df_sample_Queens_flood<-mapview(df_sample_Queens_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Queens_Data",grid = FALSE )
+m_df_sample_Queens_flood<-mapview(df_sample_Queens_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Queens_Data",grid = FALSE , layer.name = "Queens County", col.regions = "orange" )
 
-m_df_sample_Brooklyn_flood<-mapview(df_sample_Brooklyn_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Brooklyn_Data", grid = FALSE)
+m_df_sample_Brooklyn_flood<-mapview(df_sample_Brooklyn_flood,crs = 4269,  xcol = "longitude", ycol = "latitude",zcol="County", legend = TRUE, popup="Brooklyn_Data", grid = FALSE,layer.name = "Kings County", col.regions = "black")
 ```
 
-```{r}
+```{r creating map,  echo=TRUE, message=FALSE, warning=FALSE}
 m_df_sample_Brooklyn_flood+m_df_sample_Queens_flood+m_df_sample_Bronx_flood+m_df_sample_manhattan_flood+m_df_sample_staten_flood
 
 ```
