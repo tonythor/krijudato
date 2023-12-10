@@ -9,13 +9,19 @@ format:
     number_sections: true
 ---
 
-## As a Product 
+## Introduction
+
+According to [Swiss Re](https://www.swissre.com/risk-knowledge/risk-perspectives-blog/challenge-of-understanding-secondary-perils.html), flooding is classified as a secondary peril, posing greater modeling challenges compared to hurricanes and earthquakes. The unpredictability of flood occurrences, both in terms of timing and location, adds to the complexity. The limited adoption of flood catastrophe models by insurance professionals can be attributed to these difficulties. Current flood catastrophe models do not have a high degree of confidence, as U.S. flood models are still in their infancy.
+
+The product we've created proves valuable for insurance professionals by offering insights into the locations outlined in a schedule of values. While it doesn't fall under the category of a catastrophe model, it furnishes valuable information. This information aids insurance professionals, including underwriters and actuaries, in making well-informed decisions regarding the provision of flood insurance for individuals, groups, companies, or government entities.
+
+## As a Product
 
 This section explains where in the product development life cycle this product currently stands.
 
-### Genesis: Class Project to Product 
+### Genesis: Class Project to Product
 
-Our team initiated this project by exploring numerous publicly available NYC datasets. After extensive discussions, we collectively decided to transform our final class project into a product roadmap and a startup idea. This document marks the beginning of that journey. It serves as our running Proof of Concept (POC) for a new Software as a Service (SaaS) product. 
+Our team initiated this project by exploring numerous publicly available NYC datasets. After extensive discussions, we collectively decided to transform our final class project into a product roadmap and a startup idea. This document marks the beginning of that journey. It serves as our running Proof of Concept (POC) for a new Software as a Service (SaaS) product.
 
 There's a wealth of free information provided by the City of New York, ripe for businesses to leverage. Navigating this data is not straightforward, given the various ways of describing geographic data, such as block IDs, zone IDs, addresses, grid coordinates, etc. However, mastering this allows for the creation of an elegant and integrated information symphony.
 
@@ -23,32 +29,29 @@ There's a wealth of free information provided by the City of New York, ripe for 
 
 This phase involved our initial end-to-end process to ensure data linkability.
 
-1. Compile a list of precisely formatted addresses (for our demo, we used all CUNY campuses).
-2. Look up these addresses in the NYC "master" address API system to obtain primary keys and grid coordinates for linking to other systems.
-3. Cross-reference these addresses with a major NYC Dataset, Pluto.
-4. Merge this data with Pluto and filter it to focus on insurance data.
-5. Implement an underlying polygon system, akin to outlining zip codes on a map.
-6. Determine if the target element (i.e., the CUNY address) falls within the specified polygon.
+1.  Compile a list of precisely formatted addresses (for our demo, we used all CUNY campuses).
+2.  Look up these addresses in the NYC "master" address API system to obtain primary keys and grid coordinates for linking to other systems.
+3.  Cross-reference these addresses with a major NYC Dataset, Pluto.
+4.  Merge this data with Pluto and filter it to focus on insurance data.
+5.  Implement an underlying polygon system, akin to outlining zip codes on a map.
+6.  Determine if the target element (i.e., the CUNY address) falls within the specified polygon.
 
-### Phase 2: Alpha - The Working Product 
+### Phase 2: Alpha - The Working Product
 
-The alpha version needs to operate in a more real-time manner, such as uploading a spreadsheet of addresses and receiving output instantly. 
+The alpha version needs to operate in a more real-time manner, such as uploading a spreadsheet of addresses and receiving output instantly.
 
 To progress from POC to alpha release, we need to add:
 
-1. A database, such as Postgres Aurora.
-2. A modern authentication system.
-3. A method for correcting ambiguous addresses (e.g., "W 4th St" - is it West 4th Street?). NYC offers an API for this.
-4. A web framework to facilitate CSV uploads into the system.
-5. A display mechanism for output, which will be in HTML format, with one HTML file generated per run.
-6. Integration of the runtime R code with AWS Lambda.
+1.  A database, such as Postgres Aurora.
+2.  A modern authentication system.
+3.  A method for correcting ambiguous addresses (e.g., "W 4th St" - is it West 4th Street?). NYC offers an API for this.
+4.  A web framework to facilitate CSV uploads into the system.
+5.  A display mechanism for output, which will be in HTML format, with one HTML file generated per run.
+6.  Integration of the runtime R code with AWS Lambda.
 
 ### Future Development
 
 Once the foundational elements are operational, we plan to incorporate additional datasets, such as crime statistics, school literacy rates, and building and fire code violations.
-
-
-## Overview: CUNY Property Value
 
 ```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, output = FALSE}
 library(tidyverse)
@@ -70,34 +73,18 @@ if (!file.exists(joined_pluto_path)) {
   source('./nycfun.r')
 }
 
-# url <- "https://tonyfraser-data.s3.amazonaws.com/nyc-addresses/nyc_pluto_23v3_csv/pluto_23v3.csv"
-
-# if (!file.exists(pluto_path)) {
-#   download.file(url, pluto_path, mode = "wb")
-# }
-
 ## load the cache
 joined_pluto <- read_csv(joined_pluto_path) %>% 
   mutate(pfirm15_flag = coalesce(pfirm15_flag, 0))
 
 ```
 
-```{r fig.height=6, show = FALSE, echo = FALSE}
-joined_pluto_sorted <- joined_pluto %>%
-  arrange(desc(property_value))
-
-ggplot(joined_pluto_sorted, aes(x = reorder(location_name, property_value), y = property_value)) +
-  geom_bar(stat = "identity") +
-  scale_y_continuous(labels = dollar_format(prefix = "$", suffix = "", big.mark = ",", decimal.mark = ".", accuracy = 1)) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x = "Location Name", y = "Property Value", title = "Property Value by Location")
-```
-
-## Master Map
+## Raw Product Demonstration
 
 ```{r mapcode, warning = FALSE,  echo = FALSE}
 pluto <- read_csv(pluto_path, show_col_types = FALSE) %>%
-  mutate(flood_zone = ifelse(pfirm15_flag == 0 | is.na(pfirm15_flag), "Not in Flood Zone", "1% Annual Flood Plain"))
+  mutate(flood_zone = ifelse(pfirm15_flag == 0 | is.na(pfirm15_flag), "Not in Flood Zone", "1% Annual Flood Plain"),
+         basement = ifelse(bsmtcode == 0 | is.na(bsmtcode), "No Basement", "Basement"))
 
 dfbrklyn<-filter(pluto,borocode=='3', pfirm15_flag ==1)
 dfqueens<-filter(pluto,borocode=='4', pfirm15_flag ==1)
@@ -105,92 +92,94 @@ dfbronx<-filter(pluto,borocode=='2', pfirm15_flag ==1)
 dfmanhattan<-filter(pluto,borocode=='1', pfirm15_flag ==1)
 dfstaten<-filter(pluto,borocode=='5', pfirm15_flag ==1)
 
-# df_sample_Brooklyn<-sample_n(dfbrklyn, length(dfbrklyn$borough))
-# df_sample_Queens<-sample_n(dfqueens, length(dfqueens$borough))
-# df_sample_Bronx<-sample_n(dfbronx, length(dfbronx$borough))
-# df_sample_manhattan<-sample_n(dfmanhattan, length(dfmanhattan$borough))
-# df_sample_staten<-sample_n(dfstaten, length(dfstaten$borough))
+## change sample count before knitting 
+samplecount <- 1
 
-
-# df_sample_Brooklyn<-sample_n(dfbrklyn,2192)
-# df_sample_Queens<-sample_n(dfqueens,2155)
-# df_sample_Bronx<-sample_n(dfbronx,1399)
-# df_sample_manhattan<-sample_n(dfmanhattan,1283)
-# df_sample_staten<-sample_n(dfstaten,2040)
-
-df_sample_Brooklyn<-sample_n(dfbrklyn,100)
-df_sample_Queens<-sample_n(dfqueens,100)
-df_sample_Bronx<-sample_n(dfbronx,100)
-df_sample_manhattan<-sample_n(dfmanhattan,100)
-df_sample_staten<-sample_n(dfstaten,100)
+df_sample_Brooklyn<-sample_n(dfbrklyn,samplecount)
+df_sample_Queens<-sample_n(dfqueens,samplecount)
+df_sample_Bronx<-sample_n(dfbronx,samplecount)
+df_sample_manhattan<-sample_n(dfmanhattan,samplecount)
+df_sample_staten<-sample_n(dfstaten,samplecount)
 
 
 df_sample_Brooklyn_flood<- df_sample_Brooklyn %>%
-  mutate(Brooklyn_Data= paste("<b>Building Area: <b>", bldgarea, "<br>",
-  "<b>Lot Area: <b>", lotarea, "<br>",
-  "<b>Total Number of Units: <b>", unitstotal, "<br>",
+  mutate(Brooklyn_Data= paste(
+  "<b>Building Area: <b>", comma(bldgarea), "<br>",
+  "<b>Lot Area: <b>", comma(lotarea), "<br>",
+  "<b>Total Number of Units: <b>",unitstotal, "<br>",
   "<b>Number of Buildings: <b>", numbldgs, "<br>",
   "<b>Number of Floors: <b>", numfloors, "<br>",
-  "<b>Assessed Total: <b>", assesstot, "<br>",
+  "<b>Assessed Total: <b>", dollar(assesstot), "<br>",
   "<b>Flood Zone: <b>", flood_zone, "<br>",
   "<b>Year Built: <b>", yearbuilt, "<br>",
+  "<b>Basement: <b>", basement, "<br>",
   "<b>Location: <b>",address))%>%mutate(County=paste("Kings County"))
 
 df_sample_Queens_flood<- df_sample_Queens %>%
-  mutate(Queens_Data= paste("<b>Building Area: <b>", bldgarea, "<br>",
-  "<b>Lot Area: <b>", lotarea, "<br>",
-  "<b>Total Number of Units: <b>", unitstotal, "<br>",
+  mutate(Queens_Data= paste(  
+  "<b>Building Area: <b>", comma(bldgarea), "<br>",
+  "<b>Lot Area: <b>", comma(lotarea), "<br>",
+  "<b>Total Number of Units: <b>",unitstotal, "<br>",
   "<b>Number of Buildings: <b>", numbldgs, "<br>",
   "<b>Number of Floors: <b>", numfloors, "<br>",
-  "<b>Assessed Total: <b>", assesstot, "<br>",
+  "<b>Assessed Total: <b>", dollar(assesstot), "<br>",
   "<b>Flood Zone: <b>", flood_zone, "<br>",
   "<b>Year Built: <b>", yearbuilt, "<br>",
+  "<b>Basement: <b>", basement, "<br>",
   "<b>Location: <b>",address))%>%mutate(County=paste("Queens County"))
 
 df_sample_Bronx_flood<- df_sample_Bronx %>%
-  mutate(Bronx_Data= paste("<b>Building Area: <b>", bldgarea, "<br>",
-  "<b>Lot Area: <b>", lotarea, "<br>",
-  "<b>Total Number of Units: <b>", unitstotal, "<br>",
+  mutate(Bronx_Data= paste(  
+  "<b>Building Area: <b>", comma(bldgarea), "<br>",
+  "<b>Lot Area: <b>", comma(lotarea), "<br>",
+  "<b>Total Number of Units: <b>",unitstotal, "<br>",
   "<b>Number of Buildings: <b>", numbldgs, "<br>",
   "<b>Number of Floors: <b>", numfloors, "<br>",
-  "<b>Assessed Total: <b>", assesstot, "<br>",
+  "<b>Assessed Total: <b>", dollar(assesstot), "<br>",
   "<b>Flood Zone: <b>", flood_zone, "<br>",
   "<b>Year Built: <b>", yearbuilt, "<br>",
+  "<b>Basement: <b>", basement, "<br>",
   "<b>Location: <b>",address))%>%mutate(County=paste("Bronx County"))
 
 df_sample_manhattan_flood<- df_sample_manhattan %>%
-  mutate(Manhattan_Data= paste("<b>Building Area: <b>", bldgarea, "<br>",
-  "<b>Lot Area: <b>", lotarea, "<br>",
-  "<b>Total Number of Units: <b>", unitstotal, "<br>",
+  mutate(Manhattan_Data= paste(
+  "<b>Building Area: <b>", comma(bldgarea), "<br>",
+  "<b>Lot Area: <b>", comma(lotarea), "<br>",
+  "<b>Total Number of Units: <b>",unitstotal, "<br>",
   "<b>Number of Buildings: <b>", numbldgs, "<br>",
   "<b>Number of Floors: <b>", numfloors, "<br>",
-  "<b>Assessed Total: <b>", assesstot, "<br>",
+  "<b>Assessed Total: <b>", dollar(assesstot), "<br>",
   "<b>Flood Zone: <b>", flood_zone, "<br>",
   "<b>Year Built: <b>", yearbuilt, "<br>",
+  "<b>Basement: <b>", basement, "<br>",
   "<b>Location: <b>",address))%>%mutate(County=paste("New York County"))
 
 df_sample_staten_flood<- df_sample_staten %>%
-  mutate(Staten_Island_Data= paste("<b>Building Area: <b>", bldgarea, "<br>",
-  "<b>Lot Area: <b>", lotarea, "<br>",
-  "<b>Total Number of Units: <b>", unitstotal, "<br>",
+  mutate(Staten_Island_Data= paste(
+  "<b>Building Area: <b>", comma(bldgarea), "<br>",
+  "<b>Lot Area: <b>", comma(lotarea), "<br>",
+  "<b>Total Number of Units: <b>",unitstotal, "<br>",
   "<b>Number of Buildings: <b>", numbldgs, "<br>",
   "<b>Number of Floors: <b>", numfloors, "<br>",
-  "<b>Assessed Total: <b>", assesstot, "<br>",
+  "<b>Assessed Total: <b>", dollar(assesstot), "<br>",
   "<b>Flood Zone: <b>", flood_zone, "<br>",
   "<b>Year Built: <b>", yearbuilt, "<br>",
+  "<b>Basement: <b>", basement, "<br>",
   "<b>Location: <b>",address))%>%mutate(County=paste("Richmond County"))
 
 sample_colleges <- joined_pluto %>%
-  mutate(flood_zone = ifelse(pfirm15_flag == 0 | is.na(pfirm15_flag), "Not in Flood Zone", "1% Annual Flood Plain")) %>%
+  mutate(flood_zone = ifelse(pfirm15_flag == 0 | is.na(pfirm15_flag), "Not in Flood Zone", "1% Annual Flood Plain"),
+    basement = ifelse(bsmtcode == 0 | is.na(bsmtcode), "No Basement", "Basement")) %>%
   mutate(colleges_data = paste("<b>College: <b>", location_name, "<br>",
-  "<b>Building Area: <b>", bldgarea, "<br>",
-  "<b>Lot Area: <b>", lotarea, "<br>",
-  "<b>Total Number of Units: <b>", unitstotal, "<br>",
+  "<b>Building Area: <b>", comma(bldgarea), "<br>",
+  "<b>Lot Area: <b>", comma(lotarea), "<br>",
+  "<b>Total Number of Units: <b>",unitstotal, "<br>",
   "<b>Number of Buildings: <b>", numbldgs, "<br>",
   "<b>Number of Floors: <b>", numfloors, "<br>",
-  "<b>Assessed Total: <b>", assesstot, "<br>",
+  "<b>Assessed Total: <b>", dollar(assesstot), "<br>",
   "<b>Flood Zone: <b>", flood_zone, "<br>",
   "<b>Year Built: <b>", yearbuilt, "<br>",
+  "<b>Basement: <b>", basement, "<br>",
   "<b>Location: <b>", address))
 
 # filter na's 
@@ -269,24 +258,47 @@ polygons1 <- mapview(polys, zcol = "Field_Zone", legend = TRUE, grid = FALSE, la
 m_df_sample_Brooklyn_flood+m_df_sample_Queens_flood+m_df_sample_Bronx_flood+m_df_sample_manhattan_flood+m_df_sample_staten_flood + colleges + polygons1
 ```
 
-## The Product Output
+------------------------------------------------------------------------
 
-According to [Swiss Re](https://www.swissre.com/risk-knowledge/risk-perspectives-blog/challenge-of-understanding-secondary-perils.html), flooding is classified as a secondary peril, posing greater modeling challenges compared to hurricanes and earthquakes. The unpredictability of flood occurrences, both in terms of timing and location, adds to the complexity. The limited adoption of flood catastrophe models by insurance professionals can be attributed to these difficulties. Current flood catastrophe models do not have a high degree of confidence, as U.S. flood models are still in their infancy. 
+------------------------------------------------------------------------
 
-The product we've created proves valuable for insurance professionals by offering insights into the locations outlined in a schedule of values. While it doesn't fall under the category of a catastrophe model, it furnishes valuable information. This information aids insurance professionals, including underwriters and actuaries, in making well-informed decisions regarding the provision of flood insurance for individuals, groups, companies, or government entities. 
+## Demonstration for Insurance Professionals
 
-In our demonstration, we are using the schedule of values for the City University of New York (CUNY). 
+In our demonstration, we are using the schedule of values for the City University of New York (CUNY).
 
-### Map of Locations
+### Schedule of Values: Mapped
 
-```{r}
+This map offers a comprehensive overview of all locations listed in a schedule of values. The hover-over feature provides additional property details, with a key focus on whether the property is situated in a flood zone.
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE}
 colleges + polygons1
 ```
 
+### Overview: CUNY Property Values
+
+```{r value-overview, fig.height=6, fig.width = 10, show = FALSE, echo = FALSE}
+joined_pluto_sorted <- joined_pluto %>%
+  arrange(desc(property_value))
+
+joined_pluto_sorted %>%
+  ggplot(aes(x = reorder(location_name, property_value), y = property_value, fill = as.factor(pfirm15_flag))) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = dollar_format(prefix = "$", suffix = "", big.mark = ",", decimal.mark = ".", accuracy = 1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(x = "Location Name", y = "Property Value", title = "Property Value by Location") +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(
+    values = c("0" = "lightgreen", "1" = "indianred"),
+    name = "Flood Zone Risk",
+    labels = c("No Risk", "Flood Plain")
+  )
+```
 
 ### Property Value by Flood Zone
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
+```{r value-by-flood-zone, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
 # property value per flood zone
 joined_pluto_sorted %>%
   group_by(pfirm15_flag) %>%
@@ -312,17 +324,12 @@ joined_pluto_sorted %>%
 
 Risk scores can prove to be a useful tool for underwriters to determine the complexity of the flood risk for the schedule. We've developed a risk scoring system that is assigned as follows:
 
-- Properties *not* in a flood zone and *without* a basement receive a risk score of **0**.
-- Properties *not* in a flood zone but *with* a basement are assigned a risk score of **1**.
-- Properties *in* a flood zone and *without* a basement are given a risk score of **2**.
-- Properties *in* a flood zone and *with* a basement receive a risk score of **3**.
+-   Properties *not* in a flood zone and *without* a basement receive a risk score of **0**.
+-   Properties *not* in a flood zone but *with* a basement are assigned a risk score of **1**.
+-   Properties *in* a flood zone and *without* a basement are given a risk score of **2**.
+-   Properties *in* a flood zone and *with* a basement receive a risk score of **3**.
 
-```{r, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
-# provide risk score
-# not in flood zone and doesn't have basement = 0
-# not in flood zone but has basement = 1
-# in a flood zone = 2
-# in a flood zone & has basement  = 3
+```{r risk-score, message = FALSE, warning = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
 risky_prop_flood <- joined_pluto_sorted %>%
   mutate(
     riskscore = case_when(
@@ -356,7 +363,7 @@ ggplot(data = risky_prop_flood) +
 
 ### Summary of Values by Risk Score
 
-```{r, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
+```{r values-by-risk-score, warning = FALSE, message = FALSE, echo = FALSE, show = FALSE, fig.align="center"}
 summary_data <- risky_prop_flood %>%
   group_by(riskscore) %>%
   summarize(total_assesstot = sum(assesstot, na.rm = TRUE)) %>%
@@ -373,11 +380,28 @@ summary_data %>%
   fmt_currency(columns = c("New Name for Total Assesstot"), currency = "USD")
 ```
 
-
 ## Conclusion
+
+We are confident that our product serves as a valuable tool for insurance professionals. By utilizing provided schedules of values, our product generates detailed maps and charts that analyze flood risk and offer additional property insights. These resources empower insurance professionals to make informed decisions on flood insurance risk and coverage. Our aim is to enhance the decision-making process, ultimately contributing to more effective risk management strategies.
 
 ## Future Improvements
 
-Improving this product in the future may entail incorporating data at the national level and potentially expanding it globally. However, challenges arise when applying it nationally and globally due to varying levels of detail in flood information from different countries and regions. 
+Improving this product in the future may entail incorporating data at the national level and potentially expanding it globally. However, challenges arise when applying it nationally and globally due to varying levels of detail in flood information from different countries and regions.
 
 Another improvement would be to add another data source that provides building construction. The type of construction can significantly impact the extent of losses in the event of a flood. Assessing the materials and design of structures would help insurance professionals estimate potential damage and calculate appropriate coverage.
+
+Additionally, future iterations of the product could benefit from the incorporation of:
+
+-   building code violations
+-   fire code violations
+-   flood history
+
+These enhancements would contribute to a more comprehensive tool, providing insurance professionals with a nuanced understanding of properties and facilitating more accurate risk assessments.
+
+## Sources
+
+[PLUTO](https://geoservice.planning.nyc.gov)
+
+[Flood Plain NYC Open Data](https://data.cityofnewyork.us/Environment/Floodplain/g62a-qs52)
+
+[Challenge of Understanding Secondary Perils](https://www.swissre.com/risk-knowledge/risk-perspectives-blog/challenge-of-understanding-secondary-perils.html)
