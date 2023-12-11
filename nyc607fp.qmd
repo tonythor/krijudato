@@ -66,6 +66,8 @@ library(gt)
 library(readr)
 library(data.table)
 
+options(scipen=999)
+
 joined_pluto_path <- "./nogit_cache/_joined_pluto.csv"
 pluto_path <- "./nogit_cache/_pluto_23v3.csv"
 
@@ -93,7 +95,7 @@ dfmanhattan<-filter(pluto,borocode=='1', pfirm15_flag ==1)
 dfstaten<-filter(pluto,borocode=='5', pfirm15_flag ==1)
 
 ## change sample count before knitting 
-samplecount <- 1
+samplecount <- 200
 
 df_sample_Brooklyn<-sample_n(dfbrklyn,samplecount)
 df_sample_Queens<-sample_n(dfqueens,samplecount)
