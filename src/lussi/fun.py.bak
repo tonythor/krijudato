@@ -3,6 +3,7 @@ import numpy as np
 import re
 import os
 
+
 # Define URLs
 url_prefix = "https://tonyfraser-data.s3.amazonaws.com/stack/"
 
@@ -13,30 +14,57 @@ select_cols = ["Year", "OrgSize", "Country", "Employment", "Gender", "EdLevel", 
 
 # Function to extract numbers and take the average
 def extract_and_average(year_string):
+    print(f"Extracting and averaging values from: {year_string}")
     numbers = list(map(int, re.findall(r"\d+", year_string)))
     return np.mean(numbers) if numbers else np.nan
 
 # Function to construct URLs based on year
 def construct_url(year):
-    return f"{url_prefix}y={year}/survey_results_public.csv"
+    url = f"{url_prefix}y={year}/survey_results_public.csv"
+    print(f"Constructed URL for {year}: {url}")
+    return url
 
 # Function to rename and select columns
-def rename_and_select(df, rename_dict, add_columns=None):
-    df = df.rename(columns=rename_dict)
-    
-    if add_columns:
-        for col in add_columns:
-            df[col] = np.nan
+def rename_and_select(df, rename_dict, add_columns=[]):
+    # Add any missing columns with NaN values
+    for col in add_columns:
+        if col not in df.columns:
+            print(f"Adding missing column: {col}")
+            df[col] = None
 
+    # Rename columns using the provided dictionary
+    df = df.rename(columns=rename_dict)
+
+    # Define the columns you want to select (including the added ones)
+    select_cols = list(rename_dict.values()) + add_columns
+
+    # Print columns before selection
+    print("Columns before selection:", df.columns.tolist())
+
+    # Check for missing columns before selection
+    missing_cols = [col for col in select_cols if col not in df.columns]
+    if missing_cols:
+        print(f"Warning: Missing columns before selection: {missing_cols}")
+        raise KeyError(f"Columns {missing_cols} not in index. Available columns: {df.columns.tolist()}")
+
+    # Return the dataframe with only the selected columns
     return df[select_cols]
 
 # Function to merge years' data
 def merge_years(years):
+    print("Starting merge process for years:", years)
+    
     def process_year(year):
+        print(f"Processing data for year: {year}")
         url = construct_url(year)
+        print(f"Loading data for year {year} from URL...")
         df = pd.read_csv(url)
-        df["Year"] = year
+        print(f"Data for year {year} loaded successfully, shape: {df.shape}")
         
+        df["Year"] = year
+        print(f"Added 'Year' column to data for {year}")
+
+        # Handle column renaming for each year
         if year == 2017:
             rename_dict = {
                 "FormalEducation": "EdLevel",
@@ -66,15 +94,7 @@ def merge_years(years):
                 "ConvertedComp": "AnnualSalary"
             }
             add_columns = ["US_State"]
-        elif year == 2021:
-            rename_dict = {
-                "ConvertedCompYearly": "AnnualSalary",
-                "LanguageHaveWorkedWith": "LanguageWorkedWith",
-                "DatabaseHaveWorkedWith": "DatabaseWorkedWith",
-                "PlatformHaveWorkedWith": "PlatformWorkedWith"
-            }
-            add_columns = []
-        elif year == 2022:
+        elif year in [2021, 2022, 2023, 2024]:
             rename_dict = {
                 "ConvertedCompYearly": "AnnualSalary",
                 "LanguageHaveWorkedWith": "LanguageWorkedWith",
@@ -86,16 +106,23 @@ def merge_years(years):
             rename_dict = {}
             add_columns = []
         
+        print(f"Renaming and selecting columns for year {year}...")
         df = rename_and_select(df, rename_dict, add_columns=add_columns)
+        print(f"Columns renamed and selected for {year}, shape: {df.shape}")
         return df
     
+    print("Processing each year individually...")
     list_of_dfs = [process_year(year) for year in years]
+    print("Combining all years' data into a single DataFrame...")
     combined_df = pd.concat(list_of_dfs, axis=0)
+    print(f"Combined DataFrame shape: {combined_df.shape}")
     
     # Apply average functions for certain columns
+    print("Calculating averages for YearsCodePro, OrgSize, and Age columns...")
     combined_df["YearsCodeProAvg"] = combined_df["YearsCodePro"].apply(lambda x: extract_and_average(str(x)))
     combined_df["OrgSizeAvg"] = combined_df["OrgSize"].apply(lambda x: extract_and_average(str(x)))
     combined_df["AgeAvg"] = combined_df["Age"].apply(lambda x: extract_and_average(str(x)))
+    print("Averages calculated and columns added.")
     
     return combined_df
 
@@ -160,7 +187,9 @@ def get_stack_df(persist=True, load_from_cache=True):
     raw_stack_fn = "merged_stack_raw.csv"
     wide_stack_fn = "merged_stack_wide.csv"
     
-    years = list(range(2017, 2022+1))
+    
+    years = list(range(2022, 2024))
+    # years = list(range(2017, 2024))
     
     # Check if data should be loaded from cache
     if load_from_cache:

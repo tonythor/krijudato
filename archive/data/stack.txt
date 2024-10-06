@@ -1,6 +1,0 @@
-stack/y=2017/survey_results_public.csv
-stack/y=2018/survey_results_public.csv
-stack/y=2019/survey_results_public.csv
-stack/y=2020/survey_results_public.csv
-stack/y=2021/survey_results_public.csv
-stack/y=2022/survey_results_public.csv
