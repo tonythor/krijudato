@@ -172,3 +172,4 @@ nyc607fp_files/*
 archive.ics.uci.edu/*
 :*
 stuff
+*.ipynb_*

@@ -220,10 +220,10 @@ def get_stack_df(load_from_cache=True):
     if load_from_cache:
         if os.path.exists(wide_stack_fn):
             # Load wide file from cache
-            return pd.read_csv(wide_stack_fn)
+            return pd.read_csv(wide_stack_fn, low_memory=False)
         elif os.path.exists(raw_stack_fn):
             # Load raw file from cache and build wide file
-            raw_stack = pd.read_csv(raw_stack_fn)
+            raw_stack = pd.read_csv(raw_stack_fn, low_memory=False)
         else:
             print("No cache files found. Generating raw and wide files...")
             raw_stack = merge_years(years)

@@ -1,8 +1,4 @@
 # Team Krijudato
-CUNY, Data 607, Fall 2023 
-
-This data all comes from stack overflow. 
-
 Team Members:
 - Kri => **Kri**stin L.
 - Ju => **Ju**lia F.
@@ -10,13 +6,7 @@ Team Members:
 - To => **To**ny F. 
 
 
-
-2024 team members:
-- KL
-- TF
-
-
-To build:
+To build the python virtual environment:
 ```shell
 # git clone into your working directory
 # git pull origin develop
@@ -47,7 +37,7 @@ hurricane:krijudato afraser$ source ./.venv/bin/activate
 # (.venv) hurricane:krijudato afraser$ cat .env
 # PYTHONPATH=/Users/afraser/Documents/src/krijudato/src:/Users/afraser/Documents/src/krijudato/.venv/lib/python3.10/site-packages(.venv) hurricane:krijudato afraser$
 
-## edit your code nomally, if tab completion doens't work, reset your pyton interpreter to the python in 
+## edit your code normally, if tab completion doesn't work, reset your python interpreter to the python in 
 # ./.venv/bin/python
 
 
