@@ -173,3 +173,7 @@ archive.ics.uci.edu/*
 :*
 stuff
 *.ipynb_*
+622a1.html
+622a1_files/
+.Rprofile
+*trash*
