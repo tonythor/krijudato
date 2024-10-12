@@ -30,3 +30,6 @@ catboost
 xgboost
 fasttext
 pymc-bart
+ipykernel
+selenium 
+beautifulsoup4

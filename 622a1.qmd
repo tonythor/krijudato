@@ -1,0 +1,42 @@
+---
+title: "Stack Overflow"
+author: "Team: I Love Lucy"
+date: "10 Oct 2024"
+output:
+  html_document:
+    toc: true          # Optional: Adds a table of contents
+    number_sections: true
+    self_contained: true 
+python: 
+  version: .venv/bin/python
+  jupyter: .venv/bin/python   # Specify the path to the virtual environment's python
+---
+
+<!-- 
+This will be submitted via HTML, so longer / wider pages are ok
+To render and publish: 
+
+# 1, render as HTML.
+(.venv) hurricane:krijudato afraser$ quarto render 622_assignment1.qmd --to html 
+
+# make sure you're logged into rpubs and have published something so rsconnect is already configured and cached. 
+(.venv) hurricane:krijudato afraser$ Rscript -e "rsconnect::rpubsUpload('Title of Your Document', '622a1.html', '622a1.qmd')"
+
+$id
+[1] "https://api.rpubs.com/api/v1/document/1229195/1b9ef99cdcaf419ba3c51a101056d0ae"
+$continueUrl
+[1] "http://rpubs.com/publish/claim/1229195/a4db2923e69e43fb82a62a12c795d9e3"
+# Now go to the claim URL and claim it.
+
+-->
+
+```{python}
+from lussi.survey import *
+stack =  get_stack_df(load_from_cache=True)
+stack.head(10)
+grouped_summary = stack.groupby("Year").agg(lambda x: (x.notnull().mean() * 100)).reset_index()
+# Display the grouped summary using pandas built-in display methods
+from IPython.display import display
+display(grouped_summary)
+
+```
