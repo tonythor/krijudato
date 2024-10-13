@@ -33,3 +33,5 @@ pymc-bart
 ipykernel
 selenium 
 beautifulsoup4
+geopandas
+seaborn
