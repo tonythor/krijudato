@@ -1,42 +1,210 @@
 ---
-title: "Stack Overflow"
-author: "Team: I Love Lucy"
+title: "Project 1: Pay and our industry"
+author: "Team: I Love Lucy "
 date: "10 Oct 2024"
 output:
   html_document:
-    toc: true          # Optional: Adds a table of contents
+    toc: true
     number_sections: true
-    self_contained: true 
+    self_contained: true
 python: 
-  version: .venv/bin/python
-  jupyter: .venv/bin/python   # Specify the path to the virtual environment's python
+  jupyter: krijudato
+execute:
+  echo: false
+  warning: false
+  message: false
+  freeze: auto
 ---
 
-<!-- 
-This will be submitted via HTML, so longer / wider pages are ok
-To render and publish: 
+<style>
+.quarto-title-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.quarto-title-meta-heading {
+    font-weight: bold;
+}
+
+.quarto-title-meta-contents {
+    margin-right: 20px;
+}
+
+body {
+    width: 900px; /* Lock the body width to 900px */
+    font-family: Arial, sans-serif;
+    margin: 0 auto; /* Center the body */
+    background-color: white; /* Set background to white */
+}
+
+/* Flexbox container for title and author */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* Add space below the header */
+}
+
+.header-container h1 {
+    margin: 0;
+    font-size: 2.5em;
+}
+
+.header-container .meta-info {
+    text-align: right; /* Align the meta information (author, date) to the right */
+    font-size: 1.2em;
+    margin: 0;
+}
+
+h2, h3, h4, h5, h6 {
+    font-family: Arial, sans-serif;
+    margin: 0 0 10px 0; /* Reduce the bottom margin for more compact headers */
+    padding: 0; /* Remove padding */
+    line-height: 1.2; /* Control the line spacing */
+}
+
+/* Adjust table and image styles */
+table {
+    width: 100%; /* Make table full width within the 900px body */
+    border-collapse: collapse;
+    max-width: 100%;
+    margin-left: auto;  /* Center the table */
+    margin-right: auto; /* Center the table */
+    overflow-x: auto; /* Allow horizontal scrolling if the table is too wide */
+    display: block;
+}
+
+table, th, td {
+    border: 1px solid lightgray;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* Custom figure sizing */
+.figure {
+    width: 100%; /* Ensure figures take full width within the 900px body */
+    margin-left: auto;  /* Center figure */
+    margin-right: auto; /* Center figure */
+}
+
+img {
+    max-width: 100%;  /* Ensure images take full width within the 900px body */
+    height: auto;
+    display: block;
+    margin-left: auto;  /* Center image */
+    margin-right: auto; /* Center image */
+}
+</style>
+
+
+```{python import_and_load, message=false, warning=false, echo=false}
+import matplotlib.pyplot as plt
+import seaborn as sns
+import geopandas as gpd
+import pandas as pd
+import io
+import base64
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.ticker as mticker
+from lussi.ziprecruiter import *
+from lussi.stackoverflow import * 
+
+data_dir = "622data_nogit"
+ziprecruiter = load_zip(data_dir = data_dir)
+wide_stack = load_stack(data_dir=data_dir, stack_type=StackType.WIDE)
+```
+
+
+
+```{python }
+# stack =  get_stack_df(load_from_cache=True)
+# stack.head(10)
+# grouped_summary = stack.groupby("Year").agg(lambda x: (x.notnull().mean() * 100)).reset_index()
+# # Display the grouped summary using pandas built-in display methods
+# from IPython.display import display
+# display(grouped_summary)
+```
+
+
+<!--  
+# To build and publish. 
 
 # 1, render as HTML.
-(.venv) hurricane:krijudato afraser$ quarto render 622_assignment1.qmd --to html 
+(.venv) hurricane:krijudato afraser$ quarto render ./622a1.qmd --to html 
 
 # make sure you're logged into rpubs and have published something so rsconnect is already configured and cached. 
-(.venv) hurricane:krijudato afraser$ Rscript -e "rsconnect::rpubsUpload('Title of Your Document', '622a1.html', '622a1.qmd')"
+(.venv) hurricane:krijudato afraser$ Rscript -e "rsconnect::rpubsUpload('622 Project 1', '622a1.html', '622a1.qmd')"
 
 $id
 [1] "https://api.rpubs.com/api/v1/document/1229195/1b9ef99cdcaf419ba3c51a101056d0ae"
 $continueUrl
 [1] "http://rpubs.com/publish/claim/1229195/a4db2923e69e43fb82a62a12c795d9e3"
 # Now go to the claim URL and claim it.
-
 -->
 
-```{python}
-from lussi.survey import *
-stack =  get_stack_df(load_from_cache=True)
-stack.head(10)
-grouped_summary = stack.groupby("Year").agg(lambda x: (x.notnull().mean() * 100)).reset_index()
-# Display the grouped summary using pandas built-in display methods
-from IPython.display import display
-display(grouped_summary)
+# Data Introduction 
+This project covers two datasets, one we'll call ZipRecruiter, and the the other we'll call Stack. 
 
+## Zip Recruiter 
+First, let’s view a sample of the Zip Recruiter dataset:
+```{python ziprecruiter}
+ziprecruiter.sample(n=10, random_state=42).head(10)
+```
+```{python plot1, message=false, warning=false, echo=false, fig.width=8, fig.height=5}
+#instead of doing plt.show, save it as base64 encoded directly within the html page, just like this.
+
+# Generate the plot
+df = ziprecruiter
+plt.figure(figsize=(8, 5))  # Adjust figure size to fit better
+sns.boxplot(y='Job Title', x='Annual Salary', data=df, orient='h')
+plt.title('Salary by title within this data set')
+plt.ylabel('')  # Remove the label on the y-axis
+img_buf = io.BytesIO()
+plt.savefig(img_buf, format='png', bbox_inches='tight')  # Save figure to buffer
+plt.close()  # Prevents Quarto from auto-rendering the plot
+img_buf.seek(0) ## reset! 
+
+# Now base64 encode.
+img_base64 = base64.b64encode(img_buf.read()).decode('utf-8')
+# Insert it into the HTML file.
+img_html = f'<img src="data:image/png;base64,{img_base64}" alt="Salary by title" />'
+# And render. There is no cached image!
+from IPython.display import display, HTML
+display(HTML(img_html))
+```
+
+This dataset was scraped from ZipRecruiter using Selenium and Chromedriver, specifically from pages displaying average salaries for various job titles across different states. We added state abbreviation and the salary likert score column for usage later. 
+
+ While relatively small, this dataset is well-suited for lightweight analysis. Its clean and standardized structure makes it an excellent candidate for regression-based algorithms like Linear Regression or Random Forest, which can be used to predict salary based on factors such as job title and state. Additionally, ZipRecruiter offers similar datasets that could be combined to expand the analysis further.
+
+## Stack Overflow
+Now let's look at the wide Stack Overflow dataset, and be sure scroll to the right.: 
+```{python ziprecruiter}
+wide_stack.sample(n=10, random_state=42).head(10)
+```
+This dataset originates from the [Stack Overflow user-entered survey data](https://survey.stackoverflow.co), covering responses from 2017 through 2023. We uploaded the raw survey data to an S3 bucket and processed it extensively to extract core columns that we believe could predict key values, particularly annual salary.
+
+This wide dataset contains over 500,000 records and is much more complex, with numerous categorical variables and some missing data. The complexity makes it well-suited for advanced machine learning algorithms like XGBoost or Random Forest, which can efficiently handle high-dimensional data and missing entries. It offers opportunities to explore various questions, such as predicting salary based on skills and education or classifying job titles based on technical skillsets.
+
+The before we dig any further, we have to point out that some data doesn't exist in some years. For example, there is no gender or sexual identity included in the survey moving forward. This shows which core columns we have access to. 
+
+### Stack Overflow columns used percentage, by year
+```{python plot2, message=false, warning=false, echo=false, fig.width=8, fig.height=9}
+filtered_columns = wide_stack.loc[:, 'Year':'AgeAvg']
+
+# Group and calculate the percentage of non-null values for the filtered columns
+grouped_summary_filtered = filtered_columns.groupby("Year").agg(lambda x: (x.notnull().mean() * 100)).reset_index()
+
+# Round the result to one decimal place
+grouped_summary_filtered_rounded = grouped_summary_filtered.round(1)
+
+# Display the grouped summary
+from IPython.display import display
+display(grouped_summary_filtered_rounded)
 ```
