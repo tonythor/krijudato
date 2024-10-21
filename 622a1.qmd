@@ -262,20 +262,37 @@ def group_gender(gender):
         return 'Other'
 
 us_data['gender_grouped']=us_data['Gender'].apply(group_gender)
-```
 
-```{python columns, message=false,warning=false}
-# columns to keep (all features but DevType (as there was too self reported to be much use) and US_State (as only 2021 had this info))
-cols_to_keep =['Year', 'Employment', 'EdLevel', 'AnnualSalary',
-       'YearsCodeProAvg', 'OrgSizeAvg', 'AgeAvg', 'python', 'sql', 'java',
-       'javascript', 'ruby', 'php', 'c', 'swift', 'scala', 'r', 'rust',
-       'julia', 'mysql', 'microsoftsqlserver', 'mongodb', 'postgresql',
-       'oracle', 'ibmdb2', 'redis', 'sqlite', 'mariadb', 'microsoftazure',
-       'googlecloud', 'ibmcloudorwatson', 'kubernetes', 'linux', 'windows',
-       'sexuality_grouped', 'ethnicity_grouped', 'aws', 'gender_grouped']
+
+def parse_devtype(df):
+    devtype_dummies = df['DevType'].str.get_dummies(sep=';')  # One-hot encode DevType roles
+    return pd.concat([df, devtype_dummies], axis=1)  # Add the encoded roles to the DataFrame
+    
+# drop unnecessary columns
+filtered_stack = (
+    wide_stack
+    .query("Year != 2019 and Year != 2020")  # No salary
+    .query("Year != 2017")  # No age
+    .query("Country == 'United States'")  # Forget that!
+    .assign(gender_grouped=wide_stack['Gender'].apply(group_gender))  # Add gender_grouped, simplify to m/f/o
+    .pipe(parse_devtype)  # Add in DevType columns
+    .drop('Gender', axis=1) 
+    .drop('Sexuality', axis=1)  # DE: sexuality_grouped as either straight or lgbtq+
+    .drop('Ethnicity', axis=1)  # DE: ethnicity_grouped, either minority or non-minority
+    .drop('PlatformWorkedWith', axis=1)  # DE: expanded in calculated columns
+    .drop('LanguageWorkedWith', axis=1)  # DE: expanded in calculated columns
+    .drop('DatabaseWorkedWith', axis=1)  # DE: expanded in calculated columns
+    .drop('US_State', axis=1)  # Too few
+    .drop('Country', axis=1) 
+    .drop('YearsCodePro', axis=1)  # DE: Replaced by YearsCodeProAvg
+    .drop('OrgSize', axis=1)  # DE: Handled by OrgSizeAvg
+    .drop('Age', axis=1)  # DE: Replaced with average age
+    .drop('DevType', axis=1)  # Already expanded into one-hot columns
+    .query('AnnualSalary > 1')   
+)
 
 # new dataframe with specific columns
-df_new = us_data[cols_to_keep].copy()
+df_new = filtered_stack
 
 # print datatypes of columns
 print(df_new.dtypes)
@@ -481,12 +498,12 @@ print("R²: %f" % r2)
 
 After evaluating the model, we obtained the following performance metrics:
 
-- RMSE: 40,752.117865
-- R²: 0.431343
+- RMSE: 42,458.6849
+- R²: 0.458285
 
-The Root Mean Square Error (RMSE) quantifies the average error between the predicted and actual values. In this case, an RMSE of 40,752.117865 indicates that, on average, the model's predictions deviate from the actual values by this amount. Lower RMSE values suggest better model performance, making this a critical metric for assessing accuracy. 
+The Root Mean Square Error (RMSE) quantifies the average error between the predicted and actual values. In this case, an RMSE of 42,458.6849 indicates that, on average, the model's predictions deviate from the actual values by this amount. Lower RMSE values suggest better model performance, making this a critical metric for assessing accuracy. 
 
-The R-squared (R²) score measures the proportion of variance in the target variable (Annual Salary) that can be explained by the features included in the model. With an R² value of 0.431343, approximately 43.13% of the variance in Annual Salary is accounted for by the model. While this indicates some explanatory power, there is still a significant portion of the variance (over 56.87%) that remains unexplained, suggesting potential areas for improvement in the model or the inclusion of additional features.
+The R-squared (R²) score measures the proportion of variance in the target variable (Annual Salary) that can be explained by the features included in the model. With an R² value of 0.458285, approximately 45.83% of the variance in Annual Salary is accounted for by the model. While this indicates some explanatory power, there is still a significant portion of the variance (over 54.1715%) that remains unexplained, suggesting potential areas for improvement in the model or the inclusion of additional features.
 
 These metrics together provide a solid foundation for evaluating the model's predictive capabilities, emphasizing its strengths while also identifying areas that may require further enhancement.
 
@@ -573,7 +590,7 @@ Upon analyzing the correlation between features, we discovered that the YearsCod
 
 To thoroughly evaluate the model's performance, we conducted experiments both with and without outliers. Our findings revealed that excluding the outliers significantly enhanced the model's predictive accuracy and stability, leading us to decide to omit them from the final dataset used for modeling.
 
-When we ran the model with the outliers included, the Root Mean Square Error (RMSE) was 768,195.66, and the R-squared value was 0.007583, keeping all else the constant. These metrics indicated that the model was poorly fitted to the data. As a result, we applied the IQR method to handle the outliers, as described in the Exploratory Data Analysis (EDA) section, which led to a substantial improvement in model performance.
+When we ran the model with the outliers included, the Root Mean Square Error (RMSE) was 764,358.58, and the R-squared value was 0.017472, keeping all else the constant. These metrics indicated that the model was poorly fitted to the data. As a result, we applied the IQR method to handle the outliers, as described in the Exploratory Data Analysis (EDA) section, which led to a substantial improvement in model performance.
 
 ##### Assessing the Model Visually
 
